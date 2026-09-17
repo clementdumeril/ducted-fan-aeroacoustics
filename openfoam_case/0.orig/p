@@ -1,0 +1,52 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// p = pression cinematique (Pa/rho), car solveur incompressible
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    // Frontieres ouvertes : pression totale imposee = 0 (air ambiant)
+    inlet
+    {
+        type            totalPressure;
+        p0              uniform 0;
+        value           uniform 0;
+    }
+    outlet
+    {
+        type            totalPressure;
+        p0              uniform 0;
+        value           uniform 0;
+    }
+    farfield
+    {
+        type            totalPressure;
+        p0              uniform 0;
+        value           uniform 0;
+    }
+
+    helice          { type zeroGradient; }
+    carter          { type zeroGradient; }
+    moteur          { type zeroGradient; }
+    bras            { type zeroGradient; }
+
+    "AMI.*"         { type cyclicAMI; }
+}
+
+
+// ************************************************************************* //

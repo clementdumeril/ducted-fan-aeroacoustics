@@ -1,0 +1,73 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2406                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale   1;   // STL deja en metres
+
+// Domaine d'air ouvert autour du ventilateur.
+// Le fan tient dans ~0.1 m de rayon ; on prend une boite large.
+//   x,y : +/- 0.20 m   (~2.6 x rayon fan)
+//   z   : -0.20 (amont/aspiration)  ->  +0.30 (aval/refoulement)
+// Le flux est suppose axial le long de +Z (levre carter en z<0 -> diffuseur en z>0).
+
+vertices
+(
+    (-0.20 -0.20 -0.20)   // 0
+    ( 0.20 -0.20 -0.20)   // 1
+    ( 0.20  0.20 -0.20)   // 2
+    (-0.20  0.20 -0.20)   // 3
+    (-0.20 -0.20  0.30)   // 4
+    ( 0.20 -0.20  0.30)   // 5
+    ( 0.20  0.20  0.30)   // 6
+    (-0.20  0.20  0.30)   // 7
+);
+
+// Maille de fond ~10 mm : 40 x 40 x 50 cellules
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (40 40 50) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    inlet                       // face z = -0.20 (aspiration)
+    {
+        type patch;
+        faces ( (0 3 2 1) );
+    }
+    outlet                      // face z = +0.30 (refoulement)
+    {
+        type patch;
+        faces ( (4 5 6 7) );
+    }
+    farfield                    // 4 faces laterales (air libre)
+    {
+        type patch;
+        faces
+        (
+            (0 4 7 3)
+            (1 2 6 5)
+            (0 1 5 4)
+            (3 7 6 2)
+        );
+    }
+);
+
+
+// ************************************************************************* //

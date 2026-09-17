@@ -1,0 +1,41 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2406                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      dynamicMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Maillage mobile : seule la zone de cellules "rotatingZone" bouge.
+dynamicFvMesh   dynamicMotionSolverFvMesh;
+
+motionSolverLibs (fvMotionSolvers);
+
+motionSolver    solidBody;       // la zone tourne en bloc (corps rigide)
+
+cellZone        rotatingZone;    // <-- cellZone cree par snappyHexMesh
+
+solidBodyMotionFunction  rotatingMotion;
+
+origin      (0 0 0);        // axe de rotation passe par l'origine
+axis        (0 0 1);        // axe de rotation = +Z
+
+// Demarrage en RAMPE : omega monte de 0 a 158 rad/s sur les 5 premieres ms
+// (evite l'onde de pression d'un demarrage instantane qui fait diverger l'AMI)
+omega       table
+(
+    (0      0)
+    (0.005  158)
+    (1.0    158)
+);
+
+
+// ************************************************************************* //

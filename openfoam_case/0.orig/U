@@ -1,0 +1,68 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    // Frontieres ouvertes : le fan aspire/refoule librement (air libre)
+    inlet
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    outlet
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    farfield
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+
+    // Pales : mur qui suit le maillage tournant (non-glissement relatif)
+    helice
+    {
+        type            movingWallVelocity;
+        value           uniform (0 0 0);
+    }
+
+    // Murs fixes
+    carter
+    {
+        type            noSlip;
+    }
+    moteur
+    {
+        type            noSlip;
+    }
+    bras
+    {
+        type            noSlip;
+    }
+
+    // Interface glissante
+    "AMI.*"
+    {
+        type            cyclicAMI;
+    }
+}
+
+
+// ************************************************************************* //

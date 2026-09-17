@@ -1,0 +1,154 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      snappyHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+castellatedMesh true;
+snap            true;
+addLayers       true;    // couches limites ON pour l'acoustique
+
+// ---------------------------------------------------------------------------
+geometry
+{
+    helice.stl { type triSurfaceMesh; name helice; }
+    carter.stl { type triSurfaceMesh; name carter; }
+    moteur.stl { type triSurfaceMesh; name moteur; }
+    bras.stl   { type triSurfaceMesh; name bras;   }
+
+    // Cylindre AMI : R=72mm (entre pale 69.2 et carter 76) ;
+    // z=[-13 ; +14]mm : englobe pales z=[-11;13.31], disque haut dans le
+    // jeu CAO pales/Moyeu_Avant (jeu = z[13.31;14.68]), disque bas sous les pales.
+    rotatingZone
+    {
+        type        searchableCylinder;
+        point1      (0 0 -0.013);
+        point2      (0 0  0.014);
+        radius      0.072;
+    }
+}
+
+// ---------------------------------------------------------------------------
+castellatedMeshControls
+{
+    maxLocalCells       2000000;
+    maxGlobalCells      6000000;
+    minRefinementCells  10;
+    nCellsBetweenLevels 3;
+    resolveFeatureAngle 30;
+    allowFreeStandingZoneFaces true;
+
+    features
+    (
+        { file "helice.eMesh"; level 4; }
+        { file "carter.eMesh"; level 3; }
+        { file "moteur.eMesh"; level 2; }
+        { file "bras.eMesh";   level 3; }
+    );
+
+    refinementSurfaces
+    {
+        helice { level (3 4); patchInfo { type wall; } }
+        carter { level (2 3); patchInfo { type wall; } }
+        moteur { level (2 2); patchInfo { type wall; } }
+        bras   { level (2 3); patchInfo { type wall; } }
+
+        rotatingZone
+        {
+            level (0 0);
+            faceZone        rotatingZone;
+            cellZone        rotatingZone;
+            cellZoneInside  inside;
+            faceType        internal;
+        }
+    }
+
+    refinementRegions
+    {
+        rotatingZone { mode inside; levels ((1E15 2)); }
+    }
+
+    // Point dans le FLUIDE : loin de tout solide (cote, hors carter)
+    locationInMesh (0.15 0.0 0.0);
+}
+
+// ---------------------------------------------------------------------------
+snapControls
+{
+    nSmoothPatch    3;
+    tolerance       2.0;
+    nSolveIter      50;
+    nRelaxIter      5;
+    nFeatureSnapIter 10;
+    implicitFeatureSnap     false;
+    explicitFeatureSnap     true;
+    multiRegionFeatureSnap  false;
+}
+
+// ---------------------------------------------------------------------------
+addLayersControls
+{
+    // tailles RELATIVES a la cellule locale (plus simple a regler)
+    relativeSizes       true;
+
+    // Couches par paroi. 3 couches sur les pales (source du bruit) et le
+    // carter ; 2 sur moteur/bras (moins critiques). On commence modeste
+    // pour MAXIMISER le taux d'insertion (les pales fines sont difficiles).
+    layers
+    {
+        helice { nSurfaceLayers 2; }   // 2 (au lieu de 3) : pale mince
+        carter { nSurfaceLayers 3; }   // marche tres bien (90%)
+        moteur { nSurfaceLayers 2; }
+        bras   { nSurfaceLayers 2; }
+    }
+
+    expansionRatio      1.2;     // chaque couche 1.2x plus epaisse que la precedente
+    finalLayerThickness 0.35;    // couches plus FINES -> passent dans les zones serrees
+    minThickness        0.01;    // seuil bas -> on insere meme de fines couches
+
+    // --- parametres qui AIDENT l'insertion sur geometrie fine/courbe ---
+    nGrow                   0;
+    featureAngle            70;   // jusqu'a 70 deg on garde des couches (bords de pale)
+    slipFeatureAngle        30;
+    nRelaxIter              5;
+    nSmoothSurfaceNormals   1;
+    nSmoothNormals          3;
+    nSmoothThickness        10;
+    maxFaceThicknessRatio   0.5;
+    maxThicknessToMedialRatio 0.5;   // moins agressif -> garde les couches sur pales minces
+    minMedialAxisAngle      90;
+    nBufferCellsNoExtrude   0;
+    nLayerIter              50;
+    nRelaxedIter            20;   // tente en mode relache si echec strict
+}
+
+// ---------------------------------------------------------------------------
+meshQualityControls
+{
+    #includeEtc "caseDicts/meshQualityDict"
+
+    nSmoothScale    4;
+    errorReduction  0.75;
+
+    // Contraintes RELACHEES, utilisees pendant les nRelaxedIter dernieres
+    // iterations de couches (on tolere un peu plus pour inserer plus de couches)
+    relaxed
+    {
+        maxNonOrtho 75;
+    }
+}
+
+writeFlags ( scalarLevels layerSets layerFields );
+mergeTolerance 1e-6;
+
+
+// ************************************************************************* //

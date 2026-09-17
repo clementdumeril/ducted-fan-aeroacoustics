@@ -1,0 +1,51 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createBafflesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// On ne touche qu'aux faces INTERNES (la faceZone du cylindre)
+internalFacesOnly   true;
+
+baffles
+{
+    // Duplique la faceZone "rotatingZone" en 2 patches cyclicAMI coincidents :
+    //   AMI1 (master) cote zone tournante  <->  AMI2 (slave) cote fixe
+    rotatingZone
+    {
+        type        faceZone;
+        zoneName    rotatingZone;
+
+        patches
+        {
+            master
+            {
+                name            AMI1;
+                type            cyclicAMI;
+                neighbourPatch  AMI2;
+                transform       noOrdering;
+                matchTolerance  1e-4;
+            }
+            slave
+            {
+                name            AMI2;
+                type            cyclicAMI;
+                neighbourPatch  AMI1;
+                transform       noOrdering;
+                matchTolerance  1e-4;
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

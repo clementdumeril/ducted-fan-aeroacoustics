@@ -1,0 +1,26 @@
+# OpenFOAM run artifacts (keep only the case configuration)
+openfoam_case/processor*/
+openfoam_case/[1-9]*/
+openfoam_case/0.[0-9]*/
+openfoam_case/constant/polyMesh/
+openfoam_case/constant/extendedFeatureEdgeMesh/
+openfoam_case/postProcessing/
+openfoam_case/VTK/
+openfoam_case/dynamicCode/
+*.foam
+log.*
+
+# Large geometry / volume data (not for a git repo)
+*.stl
+*.vtu
+*.vtk
+
+# Raw animation frames (the compiled MP4/GIF are kept in media/)
+**/frame_*.png
+
+# Python / OS
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+desktop.ini

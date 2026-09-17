@@ -1,0 +1,46 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pimpleFoam;
+
+startFrom       latestTime;
+startTime       0;
+
+stopAt          endTime;
+endTime         0.31;
+
+deltaT          5e-6;         // petit au demarrage (rampe omega)
+
+writeControl    adjustableRunTime;
+writeInterval   0.01;
+
+purgeWrite      0;
+writeFormat     binary;
+writePrecision  8;
+writeCompression off;
+
+timeFormat      general;
+timePrecision   8;
+
+runTimeModifiable true;
+
+adjustTimeStep  yes;
+maxCo           3.0;          // URANS encaisse Co>1 -> GROS pas -> desktop viable
+maxDeltaT       1e-4;         // 1e-4 resout tres bien la BPF (398 pas/tour)
+
+
+
+// ************************************************************************* //
+#include "animFO"
