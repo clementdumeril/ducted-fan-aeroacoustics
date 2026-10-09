@@ -7,7 +7,8 @@ each segment gets its own Hann-windowed, zero-padded spectrum and the two power 
 Tone levels are the spectrum peaks within +-6 Hz of the shaft frequency and of the BPF; the local
 floor is the median level between 140 and 240 Hz. Results use the raw signal (mean and linear trend
 removed per segment). A 5-point median filter, used in an earlier version, is kept only as a check:
-the segments contain no isolated spikes, and the filter raises the floor without changing the tones.
+the few outlier samples in the segments do not need it, and it raises the floor by 9 to 24 dB and
+shifts the radial BPF level by about 4 dB.
 Figures are written to figures/acoustics/.
 """
 from pathlib import Path

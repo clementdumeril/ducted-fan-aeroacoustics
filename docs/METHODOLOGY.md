@@ -97,12 +97,16 @@ Two earlier choices were dropped after checking them:
 
 - Concatenating the segments: the 15 ms gap introduces a phase jump (about 136° at 25 Hz), which splits
   and lowers the 25 Hz peak.
-- A 5-point median filter against numerical spikes: the retained segments contain no isolated spikes,
-  and the filter raises the floor by 9 to 24 dB and hides the BPF harmonics
+- A 5-point median filter against numerical spikes: the few outlier samples in the segments do not need
+  filtering (up to 4 per segment beyond 5 robust standard deviations; the large values on the axial
+  microphones are in the discarded start-up), and the filter raises the floor by 9 to 24 dB and hides the BPF harmonics
   (`figures/acoustics/raw_vs_filtered.png`).
 
 The overall level (OASPL) is not reported: absolute levels are underpredicted (incompressible URANS,
 blade-only FW-H surface), so only level differences between microphones and tone-to-floor ratios are used.
+
+The PDF reports (`report_EN.pdf`, `report_FR.pdf`) predate this re-analysis: their acoustic levels come
+from the concatenated, filtered signal.
 
 Units: in `pimpleFoam`, `p` is a kinematic pressure (m²/s²); conversion to Pa uses p_Pa = ρ·p_kin.
 

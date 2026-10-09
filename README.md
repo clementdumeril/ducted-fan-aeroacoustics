@@ -17,7 +17,7 @@ Skills: OpenFOAM case set-up and debugging (sliding mesh, solver stability), sig
 |---|---:|---|
 | Axial thrust / torque | 43.3 mN / 1.02 mN·m | [`perf_aero.py`](postprocessing/aero/perf_aero.py), [`data/forces_data`](data/forces_data) |
 | Aerodynamic power (torque × ω) | 0.162 W | same |
-| Volume flow rate, 60 mm downstream | 108 m³/h (30 L/s) | same, integrated on the downstream cut |
+| Volume flow rate, 60 mm downstream | 108 m³/h (30 L/s) | integrated on the downstream cut; needs the unpublished ParaView slices |
 | Blade-passing tone (BPF = 5 × 25.15 Hz) | 126 Hz, 20 to 28 dB above the local floor on all four microphones, with harmonics at 252 and 378 Hz | [`post_acoustique_combine.py`](postprocessing/acoustics/post_acoustique_combine.py), [`data/`](data) |
 | Strongest tone | 25 Hz (once per revolution), in the rotor plane only: more than 45 dB above its level on the axis, where it stays at the floor | same |
 
@@ -28,10 +28,10 @@ Skills: OpenFOAM case set-up and debugging (sliding mesh, solver stability), sig
 
 <p align="center">
   <img src="figures/acoustics/spl_spectrum.png" width="85%"><br>
-  <em>Far-field SPL at the four microphones: two 85 ms FW-H records (15 ms start-up removed from each), one Hann-windowed spectrum per record, averaged. The BPF and its first two harmonics appear on every microphone; the 25 Hz tone only in the rotor plane.</em>
+  <em>Far-field SPL at the four microphones: two 85 ms FW-H records (15 ms start-up removed from each), one Hann-windowed spectrum per record, averaged. The BPF and its second harmonic appear on every microphone, the third on all but the radial one; the 25 Hz tone only in the rotor plane.</em>
 </p>
 
-The 25 Hz tone was not expected for a 5-blade rotor. The force history explains it: the in-plane blade force (about 0.95 mN) rotates with the rotor and oscillates at the shaft frequency, while the thrust fluctuates near the BPF. A rotating in-plane force radiates mostly in the rotor plane, which matches the 25 Hz tone being 21 dB at the radial microphone and 18 dB at 45°, with nothing above the floor on the axis. The tone has the same level and phase in both records, so it is a steady feature of the run. I have not established whether that imbalance is physical (blade-to-blade geometry) or comes from the mesh.
+The 25 Hz tone was not expected for a 5-blade rotor. The force history explains it: the in-plane blade force (about 0.95 mN) rotates with the rotor and oscillates at the shaft frequency, while the thrust fluctuates near the BPF. A rotating in-plane force radiates mostly in the rotor plane, which matches the 25 Hz tone being 3 dB weaker at 45° than at the radial microphone, with nothing above the floor on the axis. The tone has the same level and phase in both records, so it is a steady feature of the run. I have not established whether that imbalance is physical (blade-to-blade geometry) or comes from the mesh.
 
 <p align="center">
   <img src="figures/acoustics/directivity.png" width="70%"><br>
@@ -81,7 +81,7 @@ FreeCAD → STL → snappyHexMesh + cyclicAMI → pimpleFoam k-ω SST → FW-H (
   <img src="figures/acoustics/blade_loads_time.png" width="80%">
 
 - Results recomputed from `data/`: `perf_aero.py` and `post_acoustique_combine.py` recompute thrust, torque and tone levels from the files in [`data/`](data). The values in the Results table come from those runs; the flow rate needs the ParaView slices, which are not published.
-- Spectrum processing: the two FW-H records are 85 ms each once their start-up is removed, with a 15 ms gap between them. My first version concatenated them, which puts a 136° phase jump into the 25 Hz component, and applied a 5-point median filter against numerical spikes. Re-checking both: the segments contain no isolated spikes (they sit in the discarded start-up), and the filter raised the floor by 9 to 24 dB and hid the BPF harmonics. The spectra are now computed per record and averaged, on the raw signal. The 25 Hz tone has the same level and phase in both records on the radial microphones.
+- Spectrum processing: the two FW-H records are 85 ms each once their start-up is removed, with a 15 ms gap between them. My first version concatenated them, which puts a 136° phase jump into the 25 Hz component, and applied a 5-point median filter against numerical spikes. Neither held up: the few outlier samples in the segments do not need filtering (the large values on the axial microphones are in the discarded start-up), and the filter raised the floor by 9 to 24 dB and hid the BPF harmonics. The spectra are now computed per record and averaged, on the raw signal. The 25 Hz tone has the same level and phase in both records on the radial microphones.
 
   <img src="figures/acoustics/raw_vs_filtered.png" width="80%">
 
