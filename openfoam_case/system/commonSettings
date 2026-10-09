@@ -1,47 +1,47 @@
-// Reglages communs FW-H (inclus par fwhControl)
+// Common FW-H settings (included by fwhControl)
 // ---------------------------------------------------------------------------
         libs ("libAcoustics.so");
 
         log             true;
 
-        probeFrequency  5;        // echantillonne tous les 5 pas (dt=1e-4 -> Nyquist ~1kHz, OK tonal) ; ÷5 cout FW-H
+        probeFrequency  5;        // samples every 5 steps (phase 2 dt = 3.5e-5 s -> fs = 5714 Hz); cuts the FW-H cost by 5
 
-        timeStart       0;        // on enregistre tout ; on choisira la fenetre FFT en post
+        timeStart       0;        // record everything; the FFT window is chosen in post-processing
         timeEnd         10;
 
-        writeFft        false;    // on fera la FFT en post (plus de controle)
+        writeFft        false;    // FFT done in post-processing (more control)
 
-        c0              343;      // celerite du son dans l'air (m/s)
+        c0              343;      // speed of sound in air (m/s)
         pName           p;
         pInf            0;
-        rhoName         rhoInf;   // incompressible -> densite constante
+        rhoName         rhoInf;   // incompressible -> constant density
         rho             rhoInf;
         rhoInf          1.2;      // air (kg/m3)
 
-        CofR            (0 0 0);  // centre de rotation (= axe du rotor)
+        CofR            (0 0 0);  // centre of rotation (rotor axis)
 
-        // --- MICROS VIRTUELS (en metres ; peuvent etre HORS du domaine) ---
+        // --- virtual microphones (metres; may lie outside the domain) ---
         observers
         {
-            aval_1m            // 1 m en aval, sur l'axe (cote refoulement)
+            aval_1m            // 1 m downstream, on the axis (discharge side)
             {
                 position   (0 0 1.0);
-                pRef       0.000020;   // 20 uPa : reference SPL
+                pRef       0.000020;   // 20 uPa: SPL reference
                 fftFreq    1024;
             }
-            amont_1m           // 1 m en amont, sur l'axe (cote aspiration)
+            amont_1m           // 1 m upstream, on the axis (suction side)
             {
                 position   (0 0 -1.0);
                 pRef       0.000020;
                 fftFreq    1024;
             }
-            radial_1m          // 1 m sur le cote (perpendiculaire a l'axe)
+            radial_1m          // 1 m to the side (perpendicular to the axis)
             {
                 position   (1.0 0 0);
                 pRef       0.000020;
                 fftFreq    1024;
             }
-            diag45_1m          // 1 m a 45 deg (aval + cote) -> directivite
+            diag45_1m          // 1 m at 45 deg (downstream + side) -> directivity
             {
                 position   (0.707 0 0.707);
                 pRef       0.000020;

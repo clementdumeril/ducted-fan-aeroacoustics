@@ -1,17 +1,17 @@
 // Function object Ffowcs-Williams & Hawkings (libAcoustics)
-// Surface source = les pales (helice) -> bruit de chargement (dipole = tonal)
+// Source surface = the blades (patch helice) -> loading noise (dipole, tonal)
 // ---------------------------------------------------------------------------
 FWH_helice
 {
     type            FfowcsWilliamsHawkings;
-    formulationType Farassat1AFormulation;   // formulation 1A de Farassat (standard)
+    formulationType Farassat1AFormulation;   // Farassat formulation 1A (standard)
 
     #include        "commonSettings";
 
     patches         ();
     interpolationScheme cellPoint;
 
-    // La surface acoustique = la peau des pales (qui tourne)
+    // Acoustic surface = the blade skin (rotating)
     surfaces
     (
         helice
@@ -23,9 +23,9 @@ FWH_helice
     );
 
     cleanFreq               100;
-    nonUniformSurfaceMotion true;     // la surface (pales) TOURNE
+    nonUniformSurfaceMotion true;     // the surface (blades) rotates
     Ufwh    (0 0 0);
-    U0      (0 0 0);                  // pas d'ecoulement moyen impose (fan en air calme)
+    U0      (0 0 0);                  // no imposed mean flow (fan in still air)
     fixedResponseDelay      false;
     responseDelay           0.01;
 }

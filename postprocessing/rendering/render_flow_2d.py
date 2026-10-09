@@ -16,6 +16,10 @@ from scipy.interpolate import griddata
 REPO = Path(__file__).resolve().parents[2]
 VTK_DIR = Path(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("FLOW_VTK", REPO / "data" / "flow_vtk"))
 OUT = REPO / "figures" / "flow"
+if not (VTK_DIR / "meridien.vtp").exists() or not (VTK_DIR / "avalZ.vtp").exists():
+    sys.exit(f"meridien.vtp and avalZ.vtp not found in {VTK_DIR}.\n"
+             "These ParaView slices of the last time step are not published; export them from the case\n"
+             "and pass their folder: python render_flow_2d.py <folder>")
 
 
 def read(path):

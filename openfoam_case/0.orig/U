@@ -19,7 +19,7 @@ internalField   uniform (0 0 0);
 
 boundaryField
 {
-    // Frontieres ouvertes : le fan aspire/refoule librement (air libre)
+    // Open boundaries: the fan draws in and blows out freely (open air)
     inlet
     {
         type            pressureInletOutletVelocity;
@@ -36,14 +36,14 @@ boundaryField
         value           uniform (0 0 0);
     }
 
-    // Pales : mur qui suit le maillage tournant (non-glissement relatif)
+    // Blades: wall moving with the rotating mesh (relative no-slip)
     helice
     {
         type            movingWallVelocity;
         value           uniform (0 0 0);
     }
 
-    // Murs fixes
+    // Static walls
     carter
     {
         type            noSlip;
@@ -57,7 +57,7 @@ boundaryField
         type            noSlip;
     }
 
-    // Interface glissante
+    // Sliding interface
     "AMI.*"
     {
         type            cyclicAMI;

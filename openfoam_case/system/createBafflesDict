@@ -13,13 +13,13 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// On ne touche qu'aux faces INTERNES (la faceZone du cylindre)
+// Only internal faces are affected (the faceZone of the cylinder)
 internalFacesOnly   true;
 
 baffles
 {
-    // Duplique la faceZone "rotatingZone" en 2 patches cyclicAMI coincidents :
-    //   AMI1 (master) cote zone tournante  <->  AMI2 (slave) cote fixe
+    // Duplicates the faceZone "rotatingZone" into 2 coincident cyclicAMI patches:
+    //   AMI1 (master) on the rotating side  <->  AMI2 (slave) on the static side
     rotatingZone
     {
         type        faceZone;

@@ -13,8 +13,8 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// Arete = angle entre 2 facettes voisines > includedAngle.
-// 150 deg -> on garde les vraies aretes vives, on ignore le faceting fin.
+// Feature edge = angle between 2 neighbouring facets > includedAngle.
+// 150 deg -> keeps the real sharp edges, ignores fine faceting.
 
 helice.stl
 {

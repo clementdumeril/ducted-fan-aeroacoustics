@@ -39,7 +39,7 @@ boundaryField
         value           uniform 128;
     }
 
-    // omegaWallFunction : gere automatiquement bas-Re ET lois de paroi selon y+
+    // omegaWallFunction: switches between low-Re and wall-function behaviour from y+
     helice          { type omegaWallFunction; value uniform 128; }
     carter          { type omegaWallFunction; value uniform 128; }
     moteur          { type omegaWallFunction; value uniform 128; }

@@ -13,14 +13,14 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// p = pression cinematique (Pa/rho), car solveur incompressible
+// p = kinematic pressure (Pa/rho), incompressible solver
 dimensions      [0 2 -2 0 0 0 0];
 
 internalField   uniform 0;
 
 boundaryField
 {
-    // Frontieres ouvertes : pression totale imposee = 0 (air ambiant)
+    // Open boundaries: total pressure fixed to 0 (ambient air)
     inlet
     {
         type            totalPressure;

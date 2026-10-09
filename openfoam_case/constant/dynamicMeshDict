@@ -14,22 +14,22 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// Maillage mobile : seule la zone de cellules "rotatingZone" bouge.
+// Moving mesh: only the cell zone "rotatingZone" moves.
 dynamicFvMesh   dynamicMotionSolverFvMesh;
 
 motionSolverLibs (fvMotionSolvers);
 
-motionSolver    solidBody;       // la zone tourne en bloc (corps rigide)
+motionSolver    solidBody;       // the zone rotates as a rigid body
 
-cellZone        rotatingZone;    // <-- cellZone cree par snappyHexMesh
+cellZone        rotatingZone;    // <-- cellZone created by snappyHexMesh
 
 solidBodyMotionFunction  rotatingMotion;
 
-origin      (0 0 0);        // axe de rotation passe par l'origine
-axis        (0 0 1);        // axe de rotation = +Z
+origin      (0 0 0);        // rotation axis through the origin
+axis        (0 0 1);        // rotation axis = +Z
 
-// Demarrage en RAMPE : omega monte de 0 a 158 rad/s sur les 5 premieres ms
-// (evite l'onde de pression d'un demarrage instantane qui fait diverger l'AMI)
+// Start-up ramp: omega rises from 0 to 158 rad/s over the first 5 ms
+// (avoids the pressure wave of an impulsive start, which made the AMI diverge)
 omega       table
 (
     (0      0)

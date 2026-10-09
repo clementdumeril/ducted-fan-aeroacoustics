@@ -15,7 +15,7 @@ FoamFile
 
 castellatedMesh true;
 snap            true;
-addLayers       true;    // couches limites ON pour l'acoustique
+addLayers       true;    // boundary layers requested (inserted on the casing, not on the thin blades)
 
 // ---------------------------------------------------------------------------
 geometry
@@ -25,9 +25,9 @@ geometry
     moteur.stl { type triSurfaceMesh; name moteur; }
     bras.stl   { type triSurfaceMesh; name bras;   }
 
-    // Cylindre AMI : R=72mm (entre pale 69.2 et carter 76) ;
-    // z=[-13 ; +14]mm : englobe pales z=[-11;13.31], disque haut dans le
-    // jeu CAO pales/Moyeu_Avant (jeu = z[13.31;14.68]), disque bas sous les pales.
+    // AMI cylinder: R = 72 mm (between blade tip 69.2 and casing 76);
+    // z = [-13; +14] mm: encloses the blades z = [-11; 13.31], top disc in the
+    // CAD gap between blades and front hub (z = [13.31; 14.68]), bottom disc below the blades.
     rotatingZone
     {
         type        searchableCylinder;
@@ -77,7 +77,7 @@ castellatedMeshControls
         rotatingZone { mode inside; levels ((1E15 2)); }
     }
 
-    // Point dans le FLUIDE : loin de tout solide (cote, hors carter)
+    // Point in the FLUID: away from all solids (to the side, outside the casing)
     locationInMesh (0.15 0.0 0.0);
 }
 
@@ -97,38 +97,38 @@ snapControls
 // ---------------------------------------------------------------------------
 addLayersControls
 {
-    // tailles RELATIVES a la cellule locale (plus simple a regler)
+    // sizes RELATIVE to the local cell (easier to tune)
     relativeSizes       true;
 
-    // Couches par paroi. 3 couches sur les pales (source du bruit) et le
-    // carter ; 2 sur moteur/bras (moins critiques). On commence modeste
-    // pour MAXIMISER le taux d'insertion (les pales fines sont difficiles).
+    // Layers per wall: 3 on the blades (noise source) and the
+    // casing; 2 on the motor and arms (less critical). Start modest
+    // to MAXIMISE the insertion rate (thin blades are difficult).
     layers
     {
-        helice { nSurfaceLayers 2; }   // 2 (au lieu de 3) : pale mince
-        carter { nSurfaceLayers 3; }   // marche tres bien (90%)
+        helice { nSurfaceLayers 2; }   // 2 (instead of 3): thin blade
+        carter { nSurfaceLayers 3; }   // works well (90 %)
         moteur { nSurfaceLayers 2; }
         bras   { nSurfaceLayers 2; }
     }
 
-    expansionRatio      1.2;     // chaque couche 1.2x plus epaisse que la precedente
-    finalLayerThickness 0.35;    // couches plus FINES -> passent dans les zones serrees
-    minThickness        0.01;    // seuil bas -> on insere meme de fines couches
+    expansionRatio      1.2;     // each layer 1.2x thicker than the previous one
+    finalLayerThickness 0.35;    // THINNER layers -> fit in tight regions
+    minThickness        0.01;    // low threshold -> insert even thin layers
 
-    // --- parametres qui AIDENT l'insertion sur geometrie fine/courbe ---
+    // --- settings that HELP insertion on thin/curved geometry ---
     nGrow                   0;
-    featureAngle            70;   // jusqu'a 70 deg on garde des couches (bords de pale)
+    featureAngle            70;   // keep layers up to 70 deg (blade edges)
     slipFeatureAngle        30;
     nRelaxIter              5;
     nSmoothSurfaceNormals   1;
     nSmoothNormals          3;
     nSmoothThickness        10;
     maxFaceThicknessRatio   0.5;
-    maxThicknessToMedialRatio 0.5;   // moins agressif -> garde les couches sur pales minces
+    maxThicknessToMedialRatio 0.5;   // less aggressive -> keeps layers on thin blades
     minMedialAxisAngle      90;
     nBufferCellsNoExtrude   0;
     nLayerIter              50;
-    nRelaxedIter            20;   // tente en mode relache si echec strict
+    nRelaxedIter            20;   // retry with relaxed criteria if the strict pass fails
 }
 
 // ---------------------------------------------------------------------------
@@ -139,8 +139,8 @@ meshQualityControls
     nSmoothScale    4;
     errorReduction  0.75;
 
-    // Contraintes RELACHEES, utilisees pendant les nRelaxedIter dernieres
-    // iterations de couches (on tolere un peu plus pour inserer plus de couches)
+    // RELAXED criteria, used during the last nRelaxedIter
+    // layer iterations (tolerate a bit more to insert more layers)
     relaxed
     {
         maxNonOrtho 75;

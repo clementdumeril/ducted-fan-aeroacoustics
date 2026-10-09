@@ -14,13 +14,13 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-scale   1;   // STL deja en metres
+scale   1;   // STL already in metres
 
-// Domaine d'air ouvert autour du ventilateur.
-// Le fan tient dans ~0.1 m de rayon ; on prend une boite large.
-//   x,y : +/- 0.20 m   (~2.6 x rayon fan)
-//   z   : -0.20 (amont/aspiration)  ->  +0.30 (aval/refoulement)
-// Le flux est suppose axial le long de +Z (levre carter en z<0 -> diffuseur en z>0).
+// Open air domain around the fan.
+// The fan fits within ~0.1 m radius; the box is taken wide.
+// x,y: +/- 0.20 m (~2.6 x fan radius)
+// z: -0.20 (upstream, suction) -> +0.30 (downstream, discharge)
+// Flow assumed axial along +Z (casing lip at z<0 -> diffuser at z>0).
 
 vertices
 (
@@ -34,7 +34,7 @@ vertices
     (-0.20  0.20  0.30)   // 7
 );
 
-// Maille de fond ~10 mm : 40 x 40 x 50 cellules
+// Background cells ~10 mm: 40 x 40 x 50 cells
 blocks
 (
     hex (0 1 2 3 4 5 6 7) (40 40 50) simpleGrading (1 1 1)
@@ -46,17 +46,17 @@ edges
 
 boundary
 (
-    inlet                       // face z = -0.20 (aspiration)
+    inlet                       // face z = -0.20 (suction side)
     {
         type patch;
         faces ( (0 3 2 1) );
     }
-    outlet                      // face z = +0.30 (refoulement)
+    outlet                      // face z = +0.30 (discharge side)
     {
         type patch;
         faces ( (4 5 6 7) );
     }
-    farfield                    // 4 faces laterales (air libre)
+    farfield                    // 4 side faces (open air)
     {
         type patch;
         faces

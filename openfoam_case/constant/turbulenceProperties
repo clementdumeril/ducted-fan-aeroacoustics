@@ -17,7 +17,7 @@ simulationType      RAS;
 
 RAS
 {
-    RASModel        kOmegaSST;   // URANS : bon aux parois, capte le chargement instationnaire
+    RASModel        kOmegaSST;   // URANS: good near walls, resolves the unsteady blade loading
     turbulence      on;
     printCoeffs     on;
 }

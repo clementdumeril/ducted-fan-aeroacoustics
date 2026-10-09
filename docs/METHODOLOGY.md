@@ -86,13 +86,23 @@ is preliminary.
 
 ## 5. Acoustic post-processing (FFT protocol)
 
-Two 100 ms FW-H records; the first 15 ms of each are discarded and the rest concatenated into a 0.17 s
-signal (N = 972 points, fs = 5714 Hz). Hann window, single block (no Welch averaging), single-sided
-spectrum, Δf ≈ 6 Hz, no A-weighting. The mean is removed per segment, because the raw signals carry a
-non-zero offset. A 5-point median filter removes isolated numerical spikes; the raw and filtered
-spectra are compared in `figures/acoustics/raw_vs_filtered.png`. The 25 Hz and BPF tones agree within
-about 3 dB; above 130 Hz the filter adds artifacts, and the OASPL depends on the filter by up to 7 dB,
-so neither is used as a result.
+Two 100 ms FW-H records (sim time 0.19-0.29 s and 0.29-0.39 s). The first 15 ms of each are discarded
+(FW-H start-up), which leaves two 85 ms segments (486 points, fs = 5714 Hz) separated by a 15 ms gap.
+Each segment gets its mean and linear trend removed, a Hann window, and a zero-padded FFT (8192 points;
+true resolution 11.8 Hz). The two power spectra are averaged. Single-sided, no A-weighting. Tone levels
+are the peaks within ±6 Hz of 25.15 Hz and 125.7 Hz; the local floor is the median level between 140
+and 240 Hz.
+
+Two earlier choices were dropped after checking them:
+
+- Concatenating the segments: the 15 ms gap introduces a phase jump (about 136° at 25 Hz), which splits
+  and lowers the 25 Hz peak.
+- A 5-point median filter against numerical spikes: the retained segments contain no isolated spikes,
+  and the filter raises the floor by 9 to 24 dB and hides the BPF harmonics
+  (`figures/acoustics/raw_vs_filtered.png`).
+
+The overall level (OASPL) is not reported: absolute levels are underpredicted (incompressible URANS,
+blade-only FW-H surface), so only level differences between microphones and tone-to-floor ratios are used.
 
 Units: in `pimpleFoam`, `p` is a kinematic pressure (m²/s²); conversion to Pa uses p_Pa = ρ·p_kin.
 

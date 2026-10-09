@@ -11,8 +11,6 @@ Polytechnia is the engineering consultancy I co-founded in 2026. One of its firs
 
 Skills: OpenFOAM case set-up and debugging (sliding mesh, solver stability), signal processing (FFT, windowing, spike filtering checked against raw), Linux/MPI cluster built and benchmarked, Python/pvpython pipelines.
 
-<!-- TODO Clément: origin of the 1509 rpm (158 rad/s) operating point; the modal study uses 2000 rpm -->
-
 ## Results
 
 | Quantity (established regime, ω = 158 rad/s) | Value | Source |
@@ -20,8 +18,8 @@ Skills: OpenFOAM case set-up and debugging (sliding mesh, solver stability), sig
 | Axial thrust / torque | 43.3 mN / 1.02 mN·m | [`perf_aero.py`](postprocessing/aero/perf_aero.py), [`data/forces_data`](data/forces_data) |
 | Aerodynamic power (torque × ω) | 0.162 W | same |
 | Volume flow rate, 60 mm downstream | 108 m³/h (30 L/s) | same, integrated on the downstream cut |
-| Blade-passing tone (BPF = 5 × 25.15 Hz) | 126 Hz, 12 to 16 dB above the local floor on the axial microphones | [`post_acoustique_combine.py`](postprocessing/acoustics/post_acoustique_combine.py), [`data/`](data) |
-| Strongest tone | 25 Hz (once per revolution), about 38 dB stronger in the rotor plane than on the axis | same |
+| Blade-passing tone (BPF = 5 × 25.15 Hz) | 126 Hz, 20 to 28 dB above the local floor on all four microphones, with harmonics at 252 and 378 Hz | [`post_acoustique_combine.py`](postprocessing/acoustics/post_acoustique_combine.py), [`data/`](data) |
+| Strongest tone | 25 Hz (once per revolution), in the rotor plane only: more than 45 dB above its level on the axis, where it stays at the floor | same |
 
 <p align="center">
   <img src="figures/flow/meridional_velocity.png" width="85%"><br>
@@ -30,10 +28,10 @@ Skills: OpenFOAM case set-up and debugging (sliding mesh, solver stability), sig
 
 <p align="center">
   <img src="figures/acoustics/spl_spectrum.png" width="85%"><br>
-  <em>Far-field SPL at the four microphones (170 ms record, Hann window, Δf = 5.9 Hz). The BPF tone is visible on every microphone; the 25 Hz tone dominates in the rotor plane.</em>
+  <em>Far-field SPL at the four microphones: two 85 ms FW-H records (15 ms start-up removed from each), one Hann-windowed spectrum per record, averaged. The BPF and its first two harmonics appear on every microphone; the 25 Hz tone only in the rotor plane.</em>
 </p>
 
-The 25 Hz tone was not expected for a 5-blade rotor. The force history explains it: the in-plane blade force (about 0.95 mN) rotates with the rotor and oscillates at the shaft frequency, while the thrust fluctuates near the BPF. A rotating in-plane force radiates mostly in the rotor plane, which matches the radial and 45° microphones being 35 to 38 dB louder at 25 Hz than the axial ones. I have not established whether that imbalance is physical (blade-to-blade geometry) or comes from the mesh.
+The 25 Hz tone was not expected for a 5-blade rotor. The force history explains it: the in-plane blade force (about 0.95 mN) rotates with the rotor and oscillates at the shaft frequency, while the thrust fluctuates near the BPF. A rotating in-plane force radiates mostly in the rotor plane, which matches the 25 Hz tone being 21 dB at the radial microphone and 18 dB at 45°, with nothing above the floor on the axis. The tone has the same level and phase in both records, so it is a steady feature of the run. I have not established whether that imbalance is physical (blade-to-blade geometry) or comes from the mesh.
 
 <p align="center">
   <img src="figures/acoustics/directivity.png" width="70%"><br>
@@ -50,7 +48,12 @@ The 25 Hz tone was not expected for a 5-blade rotor. The force history explains 
 - Post-processing ([`postprocessing/`](postprocessing)): Python for the spectra, loads and flow rate; pvpython for the 3-D renders and animations.
 - Compute: a 2-node Linux cluster I set up for this project and for the Code_Aster runs (8 + 4 cores, MPI over Ethernet, shared NFS case directory).
 
+<details>
+<summary>How I got to this setup</summary>
+
 I started at the end of May with steady MRF runs (3000, then 4320 rpm) to get flow rates quickly. For the transient run I first tried the non-conformal coupling (NCC) of OpenFOAM.org. Over six mesh variants (re-ordered interfaces, Delaunay caps, rounded caps) the runs kept stopping in `fvMeshStitcher` around 200 µs of simulated time, so on 12 June I moved to the ESI OpenFOAM and cyclicAMI. The other practical fixes are listed in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#6-practical-pitfalls-solved-lessons-learned): serial snappyHexMesh (the parallel run aborted on the AMI zone) and PCG instead of GAMG for the pressure on the coarse mesh.
+
+</details>
 
 ## How it works
 
@@ -62,7 +65,7 @@ FreeCAD → STL → snappyHexMesh + cyclicAMI → pimpleFoam k-ω SST → FW-H (
 
 <p align="center">
   <img src="media/anim_ecoulement_fluide.gif" width="560"><br>
-  <em>Q-criterion vortices shed by the rotating blades over one revolution, coloured by velocity: tip vortices and the helical wake.</em>
+  <em>Q-criterion vortices shed by the rotating blades, coloured by velocity: tip vortices and the helical wake.</em>
 </p>
 
 <p align="center">
@@ -77,13 +80,18 @@ FreeCAD → STL → snappyHexMesh + cyclicAMI → pimpleFoam k-ω SST → FW-H (
 
   <img src="figures/acoustics/blade_loads_time.png" width="80%">
 
-- Results recomputed from `data/`: `perf_aero.py` and `post_acoustique_combine.py` recompute thrust, torque, flow rate and tone levels from the files in [`data/`](data). The values in the Results table come from those runs.
-- Raw vs filtered spectra: the pressure signals carry isolated numerical spikes, which the processing removes with a 5-point median filter. The 25 Hz and BPF levels agree within about 3 dB between raw and filtered signals on every microphone (2 dB or less for the BPF). Above about 130 Hz the filter adds artifacts and removes the 2×BPF peak, so I only claim the two low-frequency tones. The overall level (OASPL) moves by up to 7 dB on the axial microphones depending on filtering, so I do not use it as a result.
+- Results recomputed from `data/`: `perf_aero.py` and `post_acoustique_combine.py` recompute thrust, torque and tone levels from the files in [`data/`](data). The values in the Results table come from those runs; the flow rate needs the ParaView slices, which are not published.
+- Spectrum processing: the two FW-H records are 85 ms each once their start-up is removed, with a 15 ms gap between them. My first version concatenated them, which puts a 136° phase jump into the 25 Hz component, and applied a 5-point median filter against numerical spikes. Re-checking both: the segments contain no isolated spikes (they sit in the discarded start-up), and the filter raised the floor by 9 to 24 dB and hid the BPF harmonics. The spectra are now computed per record and averaged, on the raw signal. The 25 Hz tone has the same level and phase in both records on the radial microphones.
 
   <img src="figures/acoustics/raw_vs_filtered.png" width="80%">
 
 - Mesh quality: `checkMesh` figures and the cells the solver has to tolerate are listed in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#3-mesh); their effect on the spectrum has not been measured.
-- Cluster benchmark. On a 0.78 M-cell test case, the gain on one node saturates at 4 cores (1.51× over 1 core, 1.44× on 8). 12 cores across both machines reached 1.93×, at 16 % parallel efficiency. For this AMI case, splitting one run across the two machines gave no gain, so I used the cluster to run independent cases side by side.
+<details>
+<summary>Cluster benchmark</summary>
+
+On a 0.78 M-cell test case, the gain on one node saturates at 4 cores (1.51× over 1 core, 1.44× on 8). 12 cores across both machines reached 1.93×, at 16 % parallel efficiency. For this AMI case, splitting one run across the two machines gave no gain, so I used the cluster to run independent cases side by side.
+
+</details>
 
 ## Limitations
 
@@ -102,7 +110,7 @@ Post-processing, from the repository root (Python 3 with numpy, scipy, matplotli
 ```bash
 python postprocessing/acoustics/post_acoustique_combine.py      # spectra, tone levels, directivity, filter check
 python postprocessing/aero/perf_aero.py                         # thrust, torque, power (+ flow rate if the slices are given)
-python postprocessing/rendering/render_flow_2d.py <flow_vtk>    # needs meridien.vtp and avalZ.vtp exported from ParaView
+python postprocessing/rendering/render_flow_2d.py <flow_vtk>    # needs meridien.vtp and avalZ.vtp exported from ParaView (not published)
 ```
 
 Solver, with OpenFOAM v2406/v2506 (ESI) and [libAcoustics](https://github.com/unicfdlab/libAcoustics), once the STL files are in place:
@@ -114,12 +122,13 @@ blockMesh && surfaceFeatureExtract
 snappyHexMesh -overwrite          # serial: the parallel run aborts on the AMI faceZone
 createBaffles -overwrite          # builds the cyclicAMI pair
 decomposePar
+export FOAM_SIGFPE=false          # the solver aborts at step 1 on degenerate cells otherwise (docs/METHODOLOGY.md, §6)
 mpirun -np 8 pimpleFoam -parallel                    # phase 1, to 0.19 s
 cp system/controlDict.phase2 system/controlDict
 mpirun -np 8 pimpleFoam -parallel                    # phase 2, FW-H recording to 0.39 s
 ```
 
-The full report is in [`docs/report_EN.pdf`](docs/report_EN.pdf), with a French version alongside.
+The full report is in [`docs/report_EN.pdf`](docs/report_EN.pdf), with a French version alongside. It predates the per-record re-analysis above: its acoustic levels come from the concatenated, filtered signal, so use the README values.
 
 ## Credits
 

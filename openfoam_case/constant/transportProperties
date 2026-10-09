@@ -15,7 +15,7 @@ FoamFile
 
 transportModel  Newtonian;
 
-// Air a 20 C : nu = mu/rho = 1.825e-5 / 1.204 = 1.516e-5 m2/s
+// Air at 20 C: nu = mu/rho = 1.825e-5 / 1.204 = 1.516e-5 m2/s
 nu              1.516e-5;
 
 

@@ -15,7 +15,7 @@ FoamFile
 
 solvers
 {
-    // Correction de flux pour le maillage mobile (AMI)
+    // Flux correction for the moving mesh (AMI)
     "pcorr.*"
     {
         solver          GAMG;
@@ -55,8 +55,8 @@ solvers
 
 PIMPLE
 {
-    correctPhi          yes;        // indispensable : maillage mobile
-    nOuterCorrectors    3;          // 3 correcteurs : compromis stabilite/vitesse
+    correctPhi          yes;        // required with a moving mesh
+    nOuterCorrectors    3;          // 3 outer correctors: stability/speed trade-off
     nCorrectors         2;
     nNonOrthogonalCorrectors 1;
     momentumPredictor   yes;
