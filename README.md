@@ -113,7 +113,7 @@ python postprocessing/aero/perf_aero.py                         # thrust, torque
 python postprocessing/rendering/render_flow_2d.py <flow_vtk>    # needs meridien.vtp and avalZ.vtp exported from ParaView (not published)
 ```
 
-Solver, with OpenFOAM v2406/v2506 (ESI) and [libAcoustics](https://github.com/unicfdlab/libAcoustics), once the STL files are in place:
+Solver, with OpenFOAM v2406 (ESI) and [libAcoustics](https://github.com/unicfdlab/libAcoustics), once the STL files are in place:
 
 ```bash
 cd openfoam_case
@@ -133,7 +133,7 @@ The full report is in [`docs/report_EN.pdf`](docs/report_EN.pdf), with a French 
 ## Credits
 
 - Serration concept and acoustic method: Z. Wei et al., *Towards silent and efficient flight by combining bioinspired owl feather serrations with cicada wing geometry*, Nature Communications, 2024 (G. X. Gu group, UC Berkeley).
-- FW-H implementation: [libAcoustics](https://github.com/unicfdlab/libAcoustics). Solver: OpenFOAM (ESI).
+- FW-H implementation: [libAcoustics](https://github.com/unicfdlab/libAcoustics). Solver: OpenFOAM v2406 (ESI), as written in the headers of the result files; the cluster meshing scripts source v2506.
 - Fan geometry: Polytechnia FreeCAD model. Simulation setup, runs, post-processing and reports: Clément Dumeril.
 
 [clement.dumeril.net](https://clement.dumeril.net) · [github.com/clementdumeril](https://github.com/clementdumeril) · MIT licence
