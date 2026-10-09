@@ -66,7 +66,7 @@ y⁺ averages ≈ 4 (buffer layer) and reaches 445 locally → the surface loadi
 
 ## 5. Acoustic post-processing (FFT protocol)
 
-Combined 0.20 s record (two contiguous segments), **Hann** window, N = 972 points, fs = 5714 Hz
+Combined 0.17 s record (two contiguous segments), **Hann** window, N = 972 points, fs = 5714 Hz
 (Nyquist 2857 Hz), **single block** (no Welch averaging), single-sided spectrum, Δf ≈ 6 Hz, **no
 A-weighting**. OASPL from the RMS signal, L = 20·log₁₀(p_rms / p_ref). The mean is removed per segment
 (the raw signals carry a non-zero offset and must not be read as pure acoustic pressure); a 5-point

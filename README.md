@@ -1,221 +1,111 @@
-# Aeroacoustic CFD Study of a Ducted Fan with Bioinspired Blades
+# Aeroacoustic CFD of a ducted fan with owl-inspired serrated blades
 
-> End-to-end computational aeroacoustics (CAA) pipeline — from CAD geometry to the far-field noise
-> spectrum — for a ducted desk fan whose blades carry **owl-feather-inspired trailing-edge
-> serrations**. Unsteady **URANS k-ω SST** flow on a sliding-mesh (AMI) grid, coupled to the
-> **Ffowcs-Williams & Hawkings** acoustic analogy.
-
-![OpenFOAM](https://img.shields.io/badge/CFD-OpenFOAM%20v2506-blue)
-![Python](https://img.shields.io/badge/post--processing-Python%20%7C%20ParaView-green)
-![Acoustics](https://img.shields.io/badge/acoustics-FW--H%20(libAcoustics)-orange)
-![License](https://img.shields.io/badge/license-MIT-lightgrey)
-![Status](https://img.shields.io/badge/status-exploratory%20study-yellow)
+URANS simulation (OpenFOAM, k-ω SST, sliding mesh) of a 5-blade ducted desk fan at 1509 rpm, coupled to a Ffowcs Williams–Hawkings analogy to predict the tonal noise at 1 m: 43 mN of thrust, 108 m³/h, and a blade-passing tone at 126 Hz.
 
 <p align="center">
   <img src="media/anim_ecoulement_fluide.gif" width="640"><br>
-  <em>Vortical structures (Q-criterion) shedding from the rotating blades over one revolution — coloured by velocity.</em>
+  <em>Q-criterion vortices shed by the rotating blades over one revolution, coloured by velocity.</em>
 </p>
 
----
+Polytechnia is the engineering consultancy I co-founded in 2026. One of its first projects was a quiet desk fan whose blades carry trailing-edge serrations inspired by owl feathers (Wei et al., *Nature Communications*, 2024). Between late May and June 2026 I built the simulation chain to see what such a fan sounds like before printing it: CAD, mesh, rotating URANS, acoustic analogy, spectra. This is an internal study; it has not been delivered to a client. The structural side of the same fan (modal and drop-shock analysis of the 3D-printed housing) is in [ventilator-modal-analysis-petgcf](https://github.com/clementdumeril/ventilator-modal-analysis-petgcf).
 
-## 1. Overview
+## Results
 
-This project builds and runs a **complete numerical aeroacoustic workflow** to characterise the
-tonal noise of a ducted fan, and applies it to a fan with **biomimetic (serrated) blades** inspired
-by the silent flight of owls [1]. The chain couples an unsteady incompressible CFD simulation of the
-rotating fan to an acoustic analogy that propagates the blade loading to virtual microphones at 1 m.
+| Quantity (established regime, ω = 158 rad/s) | Value | Source |
+|---|---:|---|
+| Axial thrust / torque | 43.3 mN / 1.02 mN·m | [`perf_aero.py`](postprocessing/aero/perf_aero.py), [`data/forces_data`](data/forces_data) |
+| Aerodynamic power (torque × ω) | 0.162 W | same |
+| Volume flow rate, 60 mm downstream | 108 m³/h (30 L/s) | same, integrated on the downstream cut |
+| Blade-passing tone (BPF = 5 × 25.15 Hz) | 126 Hz, 12 to 16 dB above the local floor on the axial microphones | [`post_acoustique_combine.py`](postprocessing/acoustics/post_acoustique_combine.py), [`data/`](data) |
+| Strongest tone | 25 Hz (once per revolution), +18 dB radial vs −20 dB on the axis | same |
 
-The full study is documented in the reports ([FR](docs/report_FR.pdf) · [EN](docs/report_EN.pdf)).
-It is presented as an **exploratory engineering study**: the pipeline is operational and produces
-physically consistent results, and the validation steps that remain are stated explicitly (§7).
+<p align="center">
+  <img src="figures/flow/meridional_velocity.png" width="85%"><br>
+  <em>Meridional cut: the blades drive an annular jet along the duct wall, with a slow recirculating wake behind the motor hub.</em>
+</p>
 
-**Why this project is interesting**
-- A *complete* CAA chain (rare in student work): CAD → complex mesh → URANS → acoustic analogy → spectra.
-- A **sliding-mesh (AMI)** treatment of true blade rotation — not a frozen-rotor / MRF shortcut.
-- Deployed on a **self-built 2-node compute cluster** (MPI), with honest HPC benchmarking.
-- **Scientific rigour**: mesh quality, y⁺, time-step strategy, FFT protocol and limitations are all reported.
+<p align="center">
+  <img src="figures/acoustics/spl_spectrum.png" width="85%"><br>
+  <em>Far-field SPL at the four microphones (170 ms record, Hann window, Δf = 5.9 Hz). The BPF tone is visible on every microphone; the 25 Hz tone dominates in the rotor plane.</em>
+</p>
 
----
+The 25 Hz tone was not expected for a 5-blade rotor. The force history explains it: the in-plane blade force (about 0.95 mN) rotates with the rotor and oscillates at the shaft frequency, while the thrust fluctuates near the BPF. A rotating in-plane force radiates mostly in the rotor plane, which matches the radial and 45° microphones being 35 to 38 dB louder at 25 Hz than the axial ones. I have not established whether that imbalance is physical (blade-to-blade geometry) or comes from the mesh.
 
-## 2. Physical problem & methodology
+<p align="center">
+  <img src="figures/acoustics/directivity.png" width="70%">
+</p>
 
-Tonal fan noise originates from the **unsteady aerodynamic loading on the blades** (a rotating dipole
-source). The workflow is:
+## What I built
+
+- Geometry: exported the casing, rotor, hub and motor from the Polytechnia FreeCAD assembly to STL with Python scripts, and checked the tip clearance and duct bore on the exported surfaces.
+- Mesh ([`snappyHexMeshDict`](openfoam_case/system/snappyHexMeshDict)): hex-dominant snappyHexMesh, 10 mm background cells refined to 0.31 mm on the blades (level 5) so that the serrations are resolved. Final mesh: 1.95 M cells, max non-orthogonality 61.
+- Sliding interface ([`createBafflesDict`](openfoam_case/system/createBafflesDict)): a cylindrical faceZone (R = 72 mm) around the rotor, split into a cyclicAMI pair with `createBaffles`, about 35 k faces interpolated at each step.
+- Flow model ([`openfoam_case/`](openfoam_case)): `pimpleFoam`, k-ω SST, solid-body rotation at 158 rad/s with a 5 ms start-up ramp. Phase 1 runs with adaptive Δt (Co ≤ 5) until the loads settle; phase 2 switches to a fixed Δt = 3.5·10⁻⁵ s so the FW-H signal is uniformly sampled.
+- Acoustics ([`fwhControl`](openfoam_case/system/fwhControl)): Farassat formulation 1A (libAcoustics) on the rotating blade surface, four observers at 1 m: downstream, upstream, radial and 45°.
+- Post-processing ([`postprocessing/`](postprocessing)): Python for the spectra, loads and flow rate; pvpython for the 3-D renders and animations.
+- Compute: a 2-node Linux cluster I set up for this project and for the Code_Aster runs (8 + 4 cores, MPI over Ethernet, shared NFS case directory).
+
+The path to this setup was not direct. I started at the end of May with steady MRF runs (3000, then 4320 rpm) to get flow rates quickly. For the transient run I first tried the non-conformal coupling (NCC) of OpenFOAM.org. Over six mesh variants (re-ordered interfaces, Delaunay caps, rounded caps) the runs kept stopping in `fvMeshStitcher` around 200 µs of simulated time, so on 12 June I moved to OpenFOAM v2506 and cyclicAMI. The other practical fixes are listed in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#6-practical-pitfalls-solved-lessons-learned): serial snappyHexMesh (the parallel run aborted on the AMI zone), PCG instead of GAMG for the pressure on the coarse mesh, and a Δt sized on the worst cell.
+
+## How it works
+
+Tonal fan noise comes from the unsteady pressure the blades exert on the air, a rotating dipole. The domain is only 0.3 m wide and the solver is incompressible, so it carries no sound waves. FW-H solves this: the pressure on the blade surface is recorded during the run, and the wave equation is integrated analytically to each microphone at its retarded time. No mesh is needed out to 1 m.
 
 ```
-   CAD geometry ──► Hex-dominant mesh (AMI) ──► URANS k-ω SST ──► FW-H analogy ──► 4 microphones @ 1 m
-   (FreeCAD/STL)     (snappyHexMesh)            (pimpleFoam)       (Farassat 1A)     (SPL spectrum)
+FreeCAD → STL → snappyHexMesh + cyclicAMI → pimpleFoam k-ω SST → FW-H (blade surface) → p'(t) at 4 mics → FFT
 ```
 
-**Why an acoustic analogy?** The computational domain is only ~0.3 m across (microphones lie outside
-it), and the incompressible solver carries no acoustic waves. The **Ffowcs-Williams & Hawkings**
-analogy solves this: the unsteady loading is recorded on a surface enclosing the source (the blade
-skin) and the wave equation is solved *analytically* to any far-field observer — no need to mesh out
-to 1 m, no compressible solver.
-
-**Two-phase time strategy** — the key methodological point:
-
-| | Phase 1 — establish flow | Phase 2 — record sound |
-|---|---|---|
-| Time step | adaptive (`adjustTimeStep`, Co ≤ 5) | **fixed** Δt (uniform sampling for the FFT) |
-| FW-H | off | **on** |
-| Goal | statistically established regime | clean spectral analysis |
-
-See [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) for the full derivation and settings.
-
----
-
-## 3. Numerical setup
-
-| Item | Value |
-|---|---|
-| Solver | `pimpleFoam` (incompressible, transient) |
-| Turbulence | k-ω SST (URANS) |
-| Rotation | solid-body, ω = 158 rad/s (≈ 1509 rpm), 5 ms startup ramp |
-| Interface | sliding **cyclicAMI** (rotor ↔ static zone), built with `createBaffles` |
-| Mesh | hex-dominant `snappyHexMesh`, **0.9 M (baseline) → 2.0 M (refined)** cells |
-| Acoustics | FW-H, Farassat 1A (`libAcoustics`), 4 observers at 1 m |
-| BPF | Z·n = 5 × 25.15 = **126 Hz** |
-
-The runnable case configuration (dictionaries + initial fields) is in [`openfoam_case/`](openfoam_case/).
-
----
-
-## 4. Aerodynamic results
-
 <p align="center">
-  <img src="figures/flow/flow_1_vitesse_meridienne.png" width="49%">
-  <img src="figures/flow/flow_5_vortex_Q.png" width="49%"><br>
-  <em>Left: meridional velocity field — the annular jet and the hub wake. Right: 3-D Q-criterion vortices (tip vortices, helical wake).</em>
+  <img src="figures/mesh/flow_7_maillage_coupe.png" width="48%">
+  <img src="figures/flow/extra_dentelures_zoom.png" width="40%"><br>
+  <em>Left: mesh refinement from the far field to the blade band and AMI cylinder. Right: the serrated trailing edges as resolved by the mesh.</em>
 </p>
 
-The flow is physically consistent with a ducted fan: an **annular jet** driven by the blades, a slow
-**recirculating wake** behind the hub, blade-tip vortices and a helical wake. The wake development is
-captured by transverse cuts downstream:
+## How I checked it
 
-<p align="center">
-  <img src="figures/flow/coupesZ_planche.png" width="88%"><br>
-  <em>Wake development: transverse |U| cuts from z = −50 mm (upstream) to 200 mm (downstream). The 5-blade imprint dissipates into the jet.</em>
-</p>
+- Established regime. Thrust varies by less than 1 % per revolution after about 4.75 revolutions, before FW-H recording starts.
 
-The bioinspired **serrated trailing edges** (the object of the study) are resolved by the mesh:
+  <img src="figures/acoustics/blade_loads_time.png" width="80%">
 
-<p align="center">
-  <img src="figures/flow/extra_dentelures_zoom.png" width="60%"><br>
-  <em>Close-up of the biomimetic serrations (owl-feather-inspired) along the blade trailing edges.</em>
-</p>
+- Numbers from the data, not from the report. `perf_aero.py` and `post_acoustique_combine.py` recompute thrust, torque, flow rate and tone levels from the files in [`data/`](data). The values in the Results table come from those runs.
+- **Filtering does not create the tones.** The pressure signals carry isolated numerical spikes, which the processing removes with a 5-point median filter. I compared the raw and filtered spectra: the 25 Hz and BPF levels agree within 2 dB on every microphone. Above about 130 Hz the filter adds artifacts and removes the 2×BPF peak, so I only claim the two low-frequency tones. The overall level (OASPL) moves by up to 7 dB on the axial microphones depending on filtering, so I do not use it as a result.
 
-**Established-regime performance** (integrated on the blades):
+  <img src="figures/acoustics/raw_vs_filtered.png" width="80%">
 
-| Quantity | Value |
-|---|---|
-| Axial thrust | 43.3 mN |
-| Torque | 1.02 mN·m |
-| Aerodynamic power (Cω) | 0.162 W |
-| Volume flow rate | ≈ 108 m³/h |
-| Blade-tip speed (ωR) | 10.9 m/s |
+- Mesh quality. `checkMesh` on the final mesh: max skewness 7.25 (12 faces above 4), 49 827 concave cells (2.6 %), 1851 cells with low determinant. The solver runs with `FOAM_SIGFPE=false` to tolerate them; their effect on the spectrum has not been measured.
+- Cluster benchmark. On a 0.78 M-cell test case, 12 distributed cores ran 1.93× faster than 1 core, with only 16 % parallel efficiency. For this AMI case, splitting one run across the two machines gave no gain, so I used the cluster to run independent cases side by side.
 
----
+## Limitations
 
-## 5. Acoustic results
+- No mesh-independence study: one 1.95 M-cell mesh was retained, not validated against coarser and finer meshes.
+- No prism layers on the blades (they could not be inserted on the thin serrated edges). Blade y⁺ averages about 4 and peaks at 445, so the surface loading is preliminary.
+- Time-step independence was not checked with a second Δt.
+- URANS resolves tonal noise only. Serrations act mainly on broadband noise, and there is no smooth-blade reference run, so this study does not measure the effect of the serrations. It gives the acoustic signature of this particular fan.
+- The FW-H surface covers the blades only (no casing, arms, hub or quadrupole terms), and absolute levels are not compared with any measurement.
 
-<p align="center">
-  <img src="figures/acoustics/acou_6_spectre_intermediaire.png" width="80%"><br>
-  <em>Far-field SPL spectrum at the 4 microphones (combined 0.20 s record, Δf ≈ 6 Hz).</em>
-</p>
+## Reproduce
 
-The FW-H analogy yields the pressure signal at each observer, from which the SPL spectrum is computed
-(Hann window, single-sided, RMS-based OASPL — full protocol in the report). The spectrum shows a
-**dominant low-frequency component (~25 Hz, once-per-revolution)** and an **identifiable blade-passing
-tone (126 Hz)**, with higher levels in the radial/diagonal directions than on the axis.
-
-| Microphone | 25 Hz (1/rev) | BPF 126 Hz | OASPL |
-|---|---|---|---|
-| downstream | −20 dB | −11 dB | −1 dB |
-| upstream | −20 dB | −10 dB | −3 dB |
-| radial | +18 dB | −5 dB | +21 dB |
-| diag45 | +15 dB | −4 dB | +18 dB |
-
----
-
-## 6. Key figures & media
-
-| | |
-|---|---|
-| **Flow** | jet, vectors, pressure, Q-vortices, swirl, iso-Q levels, streamlines, wake cuts |
-| **Acoustics** | signal, SPL spectrum, raw-vs-filtered, directivity, unsteady loads |
-| **Mesh** | refinement transition (coarse far-field → fine rotor → very fine blade band) |
-| **Animations** | fluid Q-vortices (1 rev), orbital views of vortices and blades — [`media/`](media/) |
-
----
-
-## 7. Limitations & validations to carry out (scientific honesty)
-
-This is an **exploratory study**. Stating the limits is part of the science:
-
-1. **Mesh independence not established** — a 2.0 M-cell mesh was *retained*, not *validated* (≥3 meshes needed).
-2. **Boundary layer under-resolved** — no prismatic layers, blade y⁺ ≈ 4 (avg) / 445 (max) → surface loading is preliminary.
-3. **Time-step independence not verified** — a second Δt would confirm the BPF peak.
-4. **URANS captures tonal noise only**, not broadband turbulence → absolute levels are underestimated.
-5. **FW-H surface limited to the blades** (casing, arms, hub, quadrupoles excluded).
-6. **Biomimetic effect not quantified** — a *smooth reference rotor* (same conditions) is required, and
-   the serrations act mainly on broadband noise, which URANS does not resolve. **The spectrum is the
-   *signature* of the biomimetic fan, not a *measurement of the serrations' effect*.**
-
-The reports list a prioritised improvement plan (mesh/time-step convergence, resolved boundary layers,
-longer recording, smooth reference rotor, LES/DES for broadband).
-
----
-
-## 8. Reproducibility
+Requires OpenFOAM v2506 with [libAcoustics](https://github.com/unicfdlab/libAcoustics), Python 3 with numpy, scipy and matplotlib, and ParaView for the renders. The STL geometry is not in the repository.
 
 ```bash
-# 1. CFD (OpenFOAM v2506+) — from openfoam_case/
-blockMesh
-surfaceFeatureExtract
-snappyHexMesh -overwrite      # serial (parallel snappy crashes at load-balancing on AMI cases)
-createBaffles -overwrite      # builds the cyclicAMI interface
-decomposePar
-mpirun -np 8 pimpleFoam -parallel      # Phase 1: establish; Phase 2: fixed Δt + FW-H (see controlDict)
+cd openfoam_case
+blockMesh && surfaceFeatureExtract
+snappyHexMesh -overwrite          # serial: the parallel run aborts on the AMI faceZone
+createBaffles -overwrite          # builds the cyclicAMI pair
+decomposePar && mpirun -np 8 pimpleFoam -parallel
 
-# 2. Post-processing (Python 3 + numpy/scipy/matplotlib, ParaView pvpython)
-python postprocessing/acoustics/post_acoustique_combine.py    # signal → SPL spectrum, BPF, OASPL
-python postprocessing/aero/perf_aero.py                       # thrust/torque/power/flow rate
-pvpython postprocessing/rendering/render_fluid.py             # flow visualisation frames → MP4
+# post-processing (works from the files already in data/)
+python postprocessing/acoustics/post_acoustique_combine.py
+python postprocessing/aero/perf_aero.py <folder with avalZ.vtp>      # flow rate needs the exported slice
+python postprocessing/rendering/render_flow_2d.py <folder with meridien.vtp, avalZ.vtp>
 ```
 
----
+The two Python post-processing scripts run in a few seconds. The full report is in [`docs/report_EN.pdf`](docs/report_EN.pdf), with a French version alongside.
 
-## 9. Repository structure
+## Credits
 
-```
-├── README.md
-├── docs/                 Full reports (FR + EN, 11 p.) and detailed methodology
-├── openfoam_case/        Runnable OpenFOAM configuration (dictionaries + initial fields)
-├── postprocessing/       Python + pvpython scripts (acoustics, aero, rendering)
-├── figures/              Curated flow / acoustics / mesh figures
-├── media/                Animations (MP4 + GIF)
-└── data/                 FW-H microphone signals + blade force histories
-```
+- Serration concept and acoustic method: Z. Wei et al., *Towards silent and efficient flight by combining bioinspired owl feather serrations with cicada wing geometry*, Nature Communications, 2024 (G. X. Gu group, UC Berkeley).
+- FW-H implementation: [libAcoustics](https://github.com/unicfdlab/libAcoustics). Solver: OpenFOAM v2506 (ESI).
+- Fan geometry: Polytechnia FreeCAD model. Simulation setup, runs, post-processing and reports: Clément Dumeril.
 
----
-
-## 10. Tech stack
-
-**OpenFOAM v2506** (pimpleFoam, snappyHexMesh, cyclicAMI) · **libAcoustics** (FW-H) ·
-**Python** (numpy, scipy, matplotlib) · **ParaView / pvpython** · **FreeCAD** ·
-**MPI** on a self-built 2-node Linux cluster.
-
-## 11. Reference
-
-[1] Z. Wei, S. Wang, S. Farris, N. Chennuri, N. Wang, S. Shinsato, K. Demir, M. Horii, **G. X. Gu**,
-*Towards silent and efficient flight by combining bioinspired owl feather serrations with cicada wing
-geometry*, **Nature Communications**, 2024 (Gu Research Group, UC Berkeley) — source of the acoustic
-methodology and the biomimetic concept.
-
-Key methods: Ffowcs Williams & Hawkings (1969) · Farassat Formulation 1A (NASA/TM-2007-214853) ·
-Menter k-ω SST (AIAA J., 1994).
-
----
-
-*Engineering student project (Polytechnia / Arts et Métiers – ENSAM). Reports available in French and English.*
+[clement.dumeril.net](https://clement.dumeril.net) · [github.com/clementdumeril](https://github.com/clementdumeril) · MIT licence
