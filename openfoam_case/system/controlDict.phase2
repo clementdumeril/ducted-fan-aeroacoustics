@@ -1,0 +1,65 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Phase 2: acoustic recording. Restart from the end of phase 1 with a fixed time step
+// (uniform sampling for the FFT) and the FW-H function object enabled.
+// The published signals are two 100 ms records, 0.19-0.29 s and 0.29-0.39 s.
+// Usage: cp system/controlDict.phase2 system/controlDict, then rerun the solver.
+
+application     pimpleFoam;
+
+startFrom       latestTime;
+startTime       0;
+
+stopAt          endTime;
+endTime         0.39;
+
+deltaT          3.5e-5;
+adjustTimeStep  no;
+
+writeControl    adjustableRunTime;
+writeInterval   0.01;
+
+purgeWrite      0;
+writeFormat     binary;
+writePrecision  8;
+writeCompression off;
+
+timeFormat      general;
+timePrecision   8;
+
+runTimeModifiable true;
+
+functions
+{
+    forces
+    {
+        type            forces;
+        libs            (forces);
+        writeControl    timeStep;
+        writeInterval   10;
+        patches         (helice);
+        rho             rhoInf;
+        rhoInf          1.204;
+        CofR            (0 0 0);
+    }
+
+    #includeFunc Q
+
+    // Ffowcs Williams-Hawkings on the blade surface, 4 observers at 1 m (libAcoustics)
+    #include "fwhControl"
+}
+
+// ************************************************************************* //

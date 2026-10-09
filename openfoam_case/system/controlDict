@@ -13,15 +13,18 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+// Phase 1: establish the flow with an adaptive time step, FW-H off.
+// Phase 2 (acoustic recording) restarts from the last write with controlDict.phase2.
+
 application     pimpleFoam;
 
-startFrom       latestTime;
+startFrom       startTime;
 startTime       0;
 
 stopAt          endTime;
-endTime         0.31;
+endTime         0.19;         // about 4.75 revolutions at 158 rad/s; loads settled
 
-deltaT          5e-6;         // petit au demarrage (rampe omega)
+deltaT          5e-6;         // small at start-up (omega ramp over 5 ms)
 
 writeControl    adjustableRunTime;
 writeInterval   0.01;
@@ -37,10 +40,26 @@ timePrecision   8;
 runTimeModifiable true;
 
 adjustTimeStep  yes;
-maxCo           3.0;          // URANS encaisse Co>1 -> GROS pas -> desktop viable
-maxDeltaT       1e-4;         // 1e-4 resout tres bien la BPF (398 pas/tour)
+maxCo           3.0;
+maxDeltaT       1e-4;         // about 400 steps per revolution
 
+functions
+{
+    // thrust and torque on the blades -> data/forces_data
+    forces
+    {
+        type            forces;
+        libs            (forces);
+        writeControl    timeStep;
+        writeInterval   10;
+        patches         (helice);
+        rho             rhoInf;
+        rhoInf          1.204;
+        CofR            (0 0 0);
+    }
 
+    // Q-criterion for the vortex renders
+    #includeFunc Q
+}
 
 // ************************************************************************* //
-#include "animFO"

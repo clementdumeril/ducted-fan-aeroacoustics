@@ -12,7 +12,7 @@ from scipy.signal import medfilt, detrend
 
 REPO = Path(__file__).resolve().parents[2]
 F1 = REPO / "data" / "FWH_helice-time.dat"      # sim time 0.19 -> 0.29 s
-F2 = REPO / "data" / "FWH_helice-time_2.dat"    # sim time 0.29 -> 0.374 s (partial)
+F2 = REPO / "data" / "FWH_helice-time_2.dat"    # sim time 0.29 -> 0.39 s
 OUT = REPO / "figures" / "acoustics"
 PREF = 20e-6; BPF = 125.7; SHAFT = 25.15; T_CUT = 0.015
 mics = ["aval_1m", "amont_1m", "radial_1m", "diag45_1m"]
