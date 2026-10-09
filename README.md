@@ -68,7 +68,7 @@ FreeCAD → STL → snappyHexMesh + cyclicAMI → pimpleFoam k-ω SST → FW-H (
   <img src="figures/acoustics/blade_loads_time.png" width="80%">
 
 - Numbers from the data, not from the report. `perf_aero.py` and `post_acoustique_combine.py` recompute thrust, torque, flow rate and tone levels from the files in [`data/`](data). The values in the Results table come from those runs.
-- **Filtering does not create the tones.** The pressure signals carry isolated numerical spikes, which the processing removes with a 5-point median filter. I compared the raw and filtered spectra: the 25 Hz and BPF levels agree within 2 dB on every microphone. Above about 130 Hz the filter adds artifacts and removes the 2×BPF peak, so I only claim the two low-frequency tones. The overall level (OASPL) moves by up to 7 dB on the axial microphones depending on filtering, so I do not use it as a result.
+- **Filtering does not create the tones.** The pressure signals carry isolated numerical spikes, which the processing removes with a 5-point median filter. I compared the raw and filtered spectra: the 25 Hz and BPF levels agree within about 3 dB on every microphone (2 dB or less for the BPF). Above about 130 Hz the filter adds artifacts and removes the 2×BPF peak, so I only claim the two low-frequency tones. The overall level (OASPL) moves by up to 7 dB on the axial microphones depending on filtering, so I do not use it as a result.
 
   <img src="figures/acoustics/raw_vs_filtered.png" width="80%">
 
