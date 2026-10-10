@@ -30,10 +30,12 @@ Full report, in preprint form: [`paper/main.pdf`](paper/main.pdf).
 
 <p align="center">
   <img src="figures/acoustics/spl_spectrum.png" width="85%"><br>
-  <em>Far-field SPL at the four microphones: two 85 ms FW-H records (15 ms start-up removed from each), one Hann-windowed spectrum per record, averaged. The BPF and its second harmonic appear on every microphone, the third on all but the radial one; the 25 Hz tone only in the rotor plane.</em>
+  <em>FW-H spectra relative to each microphone's floor: two 85 ms records (15 ms start-up removed from each), one Hann-windowed spectrum per record, averaged. The BPF and its second harmonic appear on every microphone, the third on all but the radial one; the 25 Hz tone only in the rotor plane. Shaded: a comb of lines spaced 100.5 Hz, probably numerical (see below).</em>
 </p>
 
-The 25 Hz tone was not expected for a 5-blade rotor. The force history explains it: the in-plane blade force (about 0.95 mN) rotates with the rotor and oscillates at the shaft frequency, while the thrust fluctuates near the BPF. A rotating in-plane force radiates mostly in the rotor plane, which matches the 25 Hz tone being 3 dB weaker at 45° than at the radial microphone, with nothing above the floor on the axis. The tone has the same level and phase in both records, so it is a steady feature of the run. At 25 Hz the rotor is acoustically compact, and a compact dipole rotating in the rotor plane radiates nothing on the axis and 3.0 dB less at 45° than in the plane; the FW-H data give 3.1 dB. I have not established whether that imbalance is physical (blade-to-blade geometry) or comes from the mesh.
+The 25 Hz tone was not expected for a 5-blade rotor. The force history explains it: the in-plane blade force (0.95 mN, of which 0.77 mN from pressure) rotates with the rotor and oscillates at the shaft frequency, while the thrust fluctuates near the BPF. A rotating in-plane force radiates mostly in the rotor plane, which matches the 25 Hz tone being 3 dB weaker at 45° than at the radial microphone, with nothing above the floor on the axis. The tone has the same level and phase in both records, so it is a steady feature of the run. At 25 Hz the rotor is acoustically compact, and a compact dipole rotating in the rotor plane radiates nothing on the axis and 3.0 dB less at 45° than in the plane; the FW-H data give 3.1 dB. I have not established whether that imbalance comes from the STL and mesh (the surfaces are faceted) or from the flow. A perfectly symmetric rotor with three arms would not radiate the BPF on the axis either (the axisymmetric mode first appears at 3×BPF), so the on-axis BPF also points to a loss of five-fold symmetry.
+
+Above 600 Hz the spectra contain lines every 100.5 Hz (642 to 1446 Hz), up to 44 dB above the floor. They follow bursts in the blade force that repeat every 10 ms, which is both the field write interval and a quarter revolution (9.94 ms); 170 ms of data cannot tell the two apart. I treat the comb as probably numerical and leave it out of the results ([`paper/scripts/comb_check.py`](paper/scripts/comb_check.py)).
 
 <p align="center">
   <img src="figures/acoustics/directivity.png" width="70%"><br>
@@ -43,7 +45,7 @@ The 25 Hz tone was not expected for a 5-blade rotor. The force history explains 
 ## What I built
 
 - Geometry: exported the casing, rotor, hub and motor from the Polytechnia FreeCAD assembly to STL with Python scripts, and checked the tip clearance and duct bore on the exported surfaces.
-- Mesh ([`snappyHexMeshDict`](openfoam_case/system/snappyHexMeshDict)): hex-dominant snappyHexMesh, 10 mm background cells refined to 0.31 mm on the blades (level 5) so that the serrations are resolved. Final mesh: 1.95 M cells, max non-orthogonality 61.
+- Mesh ([`snappyHexMeshDict`](openfoam_case/system/snappyHexMeshDict)): hex-dominant snappyHexMesh, 10 mm background cells refined to 0.31 mm on the blades (level 5) so that the serrations are resolved, with refined rotor and wake cylinders. Final mesh: 1.95 M cells, max non-orthogonality 61. An earlier 0.91 M-cell mesh (blades at level 4) ran locally under WSL and is not used; its dictionary is kept as `snappyHexMeshDict.baseline_0p91M`.
 - Sliding interface ([`createBafflesDict`](openfoam_case/system/createBafflesDict)): a cylindrical faceZone (R = 72 mm) around the rotor, split into a cyclicAMI pair with `createBaffles`, about 35 k faces interpolated at each step.
 - Flow model ([`openfoam_case/`](openfoam_case)): `pimpleFoam`, k-ω SST, solid-body rotation at 158 rad/s with a 5 ms start-up ramp. Phase 1 ([`controlDict`](openfoam_case/system/controlDict)) runs to 0.19 s with an adaptive Δt (`maxCo 3.0`, `maxDeltaT 1e-4`) until the loads settle; phase 2 ([`controlDict.phase2`](openfoam_case/system/controlDict.phase2)) restarts with a fixed Δt = 3.5·10⁻⁵ s so the FW-H signal is uniformly sampled.
 - Acoustics ([`fwhControl`](openfoam_case/system/fwhControl)): Farassat formulation 1A (libAcoustics) on the rotating blade surface, four observers at 1 m: downstream, upstream, radial and 45°.
@@ -87,7 +89,7 @@ FreeCAD → STL → snappyHexMesh + cyclicAMI → pimpleFoam k-ω SST → FW-H (
 
   <img src="figures/acoustics/raw_vs_filtered.png" width="80%">
 
-- Levels against the blade forces: a compact-dipole estimate built from the integrated forces ([`paper/scripts/dipole_check.py`](paper/scripts/dipole_check.py)) does not reproduce the FW-H levels: FW-H is 12 dB above it at 25 Hz and 18 dB below it for the BPF on the axis. The two errors have opposite signs, so no single unit factor explains them, and I treat only the tone frequencies, their presence on each microphone and the 25 Hz directivity as results.
+- FW-H output against the blade forces ([`paper/scripts/dipole_check.py`](paper/scripts/dipole_check.py)): at 0 Hz, 25 Hz and the BPF the rotor is acoustically compact, so the FW-H signal should match a dipole built from the integrated blade pressure force. The directivities match (the mean signal follows cos θ, the 25 Hz tone is empty on the axis and 3 dB lower at 45°). The amplitudes do not: −9 dB for the mean load, +14 dB at 25 Hz, −18 dB for the BPF on the axis. The mean-load case has no time derivative and no retardation, so the first suspect is the input to the acoustic step (pressure scaling, normals or the library output convention). The results are therefore the tone frequencies and directivities; the levels are not.
 - Mesh quality: `checkMesh` figures and the cells the solver has to tolerate are listed in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#3-mesh); their effect on the spectrum has not been measured.
 <details>
 <summary>Cluster benchmark</summary>
@@ -103,7 +105,8 @@ On a 0.78 M-cell test case, the gain on one node saturates at 4 cores (1.51× ov
 - Time-step independence was not checked with a second Δt.
 - URANS resolves tonal noise only. Serrations act mainly on broadband noise, and there is no smooth-blade reference run, so this study does not measure the effect of the serrations.
 - The FW-H surface covers the blades only (no casing, arms, hub or quadrupole terms), and absolute levels are not compared with any measurement. They are also inconsistent with the blade forces (see above), a discrepancy I have not resolved.
-- Two 85 ms records give an 11.8 Hz resolution. A contiguous 0.4 s record would cost about 55 to 60 h on the cluster, which was offline in October 2026.
+- Two 85 ms records give an 11.8 Hz resolution. A contiguous 0.4 s record would take more than 100 h on the 1.95 M-cell mesh (16.5 s per step was measured on the 0.91 M-cell mesh), and the cluster holding the restart data was offline in October 2026.
+- The solver runs only with floating-point trapping off (`FOAM_SIGFPE=false`) because of degenerate cells; their effect was not measured. Time integration is first order (227 steps per BPF period), and the lateral boundaries are 2.6 duct radii from the axis.
 
 ## Reproduce
 
@@ -117,7 +120,7 @@ python postprocessing/aero/perf_aero.py                         # thrust, torque
 python postprocessing/rendering/render_flow_2d.py <flow_vtk>    # needs meridien.vtp and avalZ.vtp exported from ParaView (not published)
 ```
 
-Solver, with OpenFOAM v2406 (ESI) and [libAcoustics](https://github.com/unicfdlab/libAcoustics), once the STL files are in place:
+Solver, with OpenFOAM (ESI; the published records come from the cluster runs, v2506) and [libAcoustics](https://github.com/unicfdlab/libAcoustics), once the STL files are in place:
 
 ```bash
 cd openfoam_case
@@ -137,7 +140,7 @@ The full report is [`paper/main.pdf`](paper/main.pdf) (rebuild with `paper/build
 ## Credits
 
 - Serration concept and acoustic method: Z. Wei et al., *Towards silent and efficient flight by combining bioinspired owl feather serrations with cicada wing geometry*, Nature Communications, 2024 (G. X. Gu group, UC Berkeley).
-- FW-H implementation: [libAcoustics](https://github.com/unicfdlab/libAcoustics). Solver: OpenFOAM v2406 (ESI), as written in the headers of the result files; the cluster meshing scripts source v2506.
+- FW-H implementation: [libAcoustics](https://github.com/unicfdlab/libAcoustics). Solver: OpenFOAM (ESI). The published records come from the cluster runs, whose scripts source v2506; the earlier 0.91 M-cell run under WSL used v2406 and is not used. The cluster has been offline since June, so this could not be re-checked from the case directories.
 - Fan geometry: Polytechnia FreeCAD model. Simulation setup, runs, post-processing and reports: Clément Dumeril.
 
 [clement.dumeril.net](https://clement.dumeril.net) · [github.com/clementdumeril](https://github.com/clementdumeril) · MIT licence

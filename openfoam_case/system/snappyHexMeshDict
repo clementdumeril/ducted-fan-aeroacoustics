@@ -1,8 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   A nd           | Website:  www.openfoam.com                      |
-|    \\/     M anipulation  |                                                 |
+| OpenFOAM snappyHexMeshDict - ventilo_sst_mesh_v2_stable                    |
+// Dictionary of the 1.95 M-cell mesh described in paper/main.pdf (blades at level 5), cluster case ventilo_sst_mesh_v2_stable.
+// The earlier 0.91 M-cell local mesh used snappyHexMeshDict.baseline_0p91M.
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -11,13 +10,11 @@ FoamFile
     class       dictionary;
     object      snappyHexMeshDict;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 castellatedMesh true;
 snap            true;
-addLayers       true;    // boundary layers requested (inserted on the casing, not on the thin blades)
+addLayers       false;
 
-// ---------------------------------------------------------------------------
 geometry
 {
     helice.stl { type triSurfaceMesh; name helice; }
@@ -25,9 +22,7 @@ geometry
     moteur.stl { type triSurfaceMesh; name moteur; }
     bras.stl   { type triSurfaceMesh; name bras;   }
 
-    // AMI cylinder: R = 72 mm (between blade tip 69.2 and casing 76);
-    // z = [-13; +14] mm: encloses the blades z = [-11; 13.31], top disc in the
-    // CAD gap between blades and front hub (z = [13.31; 14.68]), bottom disc below the blades.
+    // Same AMI cylinder as V1. It creates the rotating cellZone/faceZone.
     rotatingZone
     {
         type        searchableCylinder;
@@ -35,16 +30,33 @@ geometry
         point2      (0 0  0.014);
         radius      0.072;
     }
+
+    // Strong refinement around the rotor disk and blade tips.
+    rotorRefinement
+    {
+        type        searchableCylinder;
+        point1      (0 0 -0.020);
+        point2      (0 0  0.022);
+        radius      0.088;
+    }
+
+    // Wake refinement downstream of the fan. Axis is +Z in this case.
+    wakeRefinement
+    {
+        type        searchableCylinder;
+        point1      (0 0  0.010);
+        point2      (0 0  0.170);
+        radius      0.105;
+    }
 }
 
-// ---------------------------------------------------------------------------
 castellatedMeshControls
 {
-    maxLocalCells       2000000;
-    maxGlobalCells      6000000;
+    maxLocalCells       1800000;
+    maxGlobalCells      5500000;
     minRefinementCells  10;
-    nCellsBetweenLevels 3;
-    resolveFeatureAngle 30;
+    nCellsBetweenLevels 4;
+    resolveFeatureAngle 25;
     allowFreeStandingZoneFaces true;
 
     features
@@ -57,7 +69,8 @@ castellatedMeshControls
 
     refinementSurfaces
     {
-        helice { level (3 4); patchInfo { type wall; } }
+        // Main change vs V1: much finer blade surface.
+        helice { level (4 5); patchInfo { type wall; } }
         carter { level (2 3); patchInfo { type wall; } }
         moteur { level (2 2); patchInfo { type wall; } }
         bras   { level (2 3); patchInfo { type wall; } }
@@ -74,64 +87,62 @@ castellatedMeshControls
 
     refinementRegions
     {
-        rotatingZone { mode inside; levels ((1E15 2)); }
+        rotatingZone    { mode inside; levels ((1E15 2)); }
+        rotorRefinement { mode inside; levels ((1E15 3)); }
+        wakeRefinement  { mode inside; levels ((1E15 2)); }
     }
 
-    // Point in the FLUID: away from all solids (to the side, outside the casing)
     locationInMesh (0.15 0.0 0.0);
 }
 
-// ---------------------------------------------------------------------------
 snapControls
 {
-    nSmoothPatch    3;
-    tolerance       2.0;
-    nSolveIter      50;
-    nRelaxIter      5;
-    nFeatureSnapIter 10;
+    // Limited snap: the available STL is already faceted, so too many feature
+    // snap iterations over-attract points and create local twisted faces.
+    nSmoothPatch    4;
+    tolerance       1.2;
+    nSolveIter      45;
+    nRelaxIter      6;
+    nFeatureSnapIter 8;
     implicitFeatureSnap     false;
     explicitFeatureSnap     true;
     multiRegionFeatureSnap  false;
 }
 
-// ---------------------------------------------------------------------------
+// Boundary layers are disabled in this stable pass. The geometry available here
+// was reconstructed from the old boundary mesh, and forced layers collapse over
+// most blade faces. Keep the block for a future CAD/STL-clean pass.
 addLayersControls
 {
-    // sizes RELATIVE to the local cell (easier to tune)
     relativeSizes       true;
 
-    // Layers per wall: 3 on the blades (noise source) and the
-    // casing; 2 on the motor and arms (less critical). Start modest
-    // to MAXIMISE the insertion rate (thin blades are difficult).
     layers
     {
-        helice { nSurfaceLayers 2; }   // 2 (instead of 3): thin blade
-        carter { nSurfaceLayers 3; }   // works well (90 %)
+        helice { nSurfaceLayers 4; }
+        carter { nSurfaceLayers 3; }
         moteur { nSurfaceLayers 2; }
         bras   { nSurfaceLayers 2; }
     }
 
-    expansionRatio      1.2;     // each layer 1.2x thicker than the previous one
-    finalLayerThickness 0.35;    // THINNER layers -> fit in tight regions
-    minThickness        0.01;    // low threshold -> insert even thin layers
+    expansionRatio      1.18;
+    finalLayerThickness 0.25;
+    minThickness        0.015;
 
-    // --- settings that HELP insertion on thin/curved geometry ---
-    nGrow                   0;
-    featureAngle            70;   // keep layers up to 70 deg (blade edges)
+    nGrow                   1;
+    featureAngle            65;
     slipFeatureAngle        30;
-    nRelaxIter              5;
-    nSmoothSurfaceNormals   1;
-    nSmoothNormals          3;
-    nSmoothThickness        10;
-    maxFaceThicknessRatio   0.5;
-    maxThicknessToMedialRatio 0.5;   // less aggressive -> keeps layers on thin blades
+    nRelaxIter              8;
+    nSmoothSurfaceNormals   3;
+    nSmoothNormals          5;
+    nSmoothThickness        12;
+    maxFaceThicknessRatio   0.45;
+    maxThicknessToMedialRatio 0.45;
     minMedialAxisAngle      90;
-    nBufferCellsNoExtrude   0;
-    nLayerIter              50;
-    nRelaxedIter            20;   // retry with relaxed criteria if the strict pass fails
+    nBufferCellsNoExtrude   1;
+    nLayerIter              80;
+    nRelaxedIter            25;
 }
 
-// ---------------------------------------------------------------------------
 meshQualityControls
 {
     #includeEtc "caseDicts/meshQualityDict"
@@ -139,16 +150,15 @@ meshQualityControls
     nSmoothScale    4;
     errorReduction  0.75;
 
-    // RELAXED criteria, used during the last nRelaxedIter
-    // layer iterations (tolerate a bit more to insert more layers)
     relaxed
     {
         maxNonOrtho 75;
+        maxBoundarySkewness 20;
+        maxInternalSkewness 8;
     }
 }
 
 writeFlags ( scalarLevels layerSets layerFields );
 mergeTolerance 1e-6;
-
 
 // ************************************************************************* //

@@ -75,19 +75,24 @@ for i, m in enumerate(mics):
         s = spl_avg(i, kind == "filtered")
         res[m, kind] = {"spl": s, "shaft": peak(s, SHAFT), "BPF": peak(s, BPF), "floor": floor(s)}
 
-# --- SPL spectrum (raw, average of the two segments) ---
-fig, ax = plt.subplots(figsize=(11, 5.2))
+# --- spectrum (raw, average of the two segments), as level above each microphone's local floor ---
+# Absolute FW-H levels are not reliable (paper, Section 6.3), so the axis is relative to the 140-240 Hz floor.
+fig, ax = plt.subplots(figsize=(10, 4.8))
 for m in mics:
-    ax.plot(f, res[m, "raw"]["spl"], lw=1.1, color=colors[m], label=f"{names[m]} (1 m)")
-for k in range(1, 5):
+    r = res[m, "raw"]
+    ax.plot(f, r["spl"] - r["floor"], lw=1.0, color=colors[m], label=f"{names[m]} (1 m)")
+for k in range(1, 4):
     ax.axvline(BPF * k, color="k", ls="--", lw=0.6, alpha=.5)
-    ax.text(BPF * k, 27, f"{k}xBPF" if k > 1 else "BPF 126 Hz", rotation=90, fontsize=8, va="top", ha="right", alpha=.7)
+    ax.text(BPF * k + 8, 67, f"{k}xBPF" if k > 1 else "BPF", fontsize=10, va="top", alpha=.8)
 ax.axvline(SHAFT, color="purple", ls=":", lw=0.9, alpha=.7)
-ax.text(SHAFT, 27, "shaft 25 Hz", rotation=90, fontsize=8, va="top", ha="right", color="purple", alpha=.8)
-ax.set_xlim(0, 700); ax.set_ylim(-50, 30)
-ax.set_xlabel("Frequency (Hz)"); ax.set_ylabel("SPL (dB re 20 µPa)")
-ax.set_title("Far-field SPL from FW-H at 1 m: average of two 85 ms segments (Hann, zero-padded)")
-ax.grid(alpha=.3); ax.legend(fontsize=9)
+ax.text(SHAFT + 8, 67, "shaft", fontsize=10, va="top", color="purple")
+ax.axvspan(600, 2000, color="0.85", alpha=0.5, lw=0)
+ax.text(1300, 67, "line comb, spacing 100.5 Hz\n(probably numerical, see paper)", fontsize=10, va="top", ha="center")
+ax.set_xlim(0, 2000); ax.set_ylim(-20, 70)
+ax.set_xlabel("Frequency (Hz)", fontsize=11); ax.set_ylabel("Level above local floor (dB)", fontsize=11)
+ax.tick_params(labelsize=10)
+ax.set_title("FW-H spectra at 1 m: average of two 85 ms segments, raw signal")
+ax.grid(alpha=.3); ax.legend(fontsize=10, loc="upper right", bbox_to_anchor=(1.0, 0.82))
 plt.tight_layout(); save("spl_spectrum"); plt.close()
 
 # --- directivity: shaft-frequency and BPF levels and local floor per microphone (raw) ---

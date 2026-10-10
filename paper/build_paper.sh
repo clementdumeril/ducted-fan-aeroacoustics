@@ -5,6 +5,7 @@ cd "$(dirname "$0")/.."
 python postprocessing/acoustics/post_acoustique_combine.py
 python postprocessing/aero/perf_aero.py
 python paper/scripts/dipole_check.py
+python paper/scripts/comb_check.py
 cd paper
 pdflatex -interaction=nonstopmode main.tex >/dev/null
 bibtex main >/dev/null

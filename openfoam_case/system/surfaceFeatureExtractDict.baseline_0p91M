@@ -1,0 +1,48 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      surfaceFeatureExtractDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Feature edge = angle between 2 neighbouring facets > includedAngle.
+// 150 deg -> keeps the real sharp edges, ignores fine faceting.
+
+helice.stl
+{
+    extractionMethod    extractFromSurface;
+    includedAngle       150;
+    writeObj            yes;
+}
+
+carter.stl
+{
+    extractionMethod    extractFromSurface;
+    includedAngle       150;
+    writeObj            yes;
+}
+
+moteur.stl
+{
+    extractionMethod    extractFromSurface;
+    includedAngle       150;
+    writeObj            yes;
+}
+
+bras.stl
+{
+    extractionMethod    extractFromSurface;
+    includedAngle       150;
+    writeObj            yes;
+}
+
+
+// ************************************************************************* //
