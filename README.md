@@ -11,6 +11,8 @@ Polytechnia is the engineering consultancy I co-founded in 2026. One of its firs
 
 Skills: OpenFOAM case set-up and debugging (sliding mesh, solver stability), signal processing (FFT, windowing, spike filtering checked against raw), Linux/MPI cluster built and benchmarked, Python/pvpython pipelines.
 
+Full report, in preprint form: [`paper/main.pdf`](paper/main.pdf).
+
 ## Results
 
 | Quantity (established regime, ω = 158 rad/s) | Value | Source |
@@ -31,7 +33,7 @@ Skills: OpenFOAM case set-up and debugging (sliding mesh, solver stability), sig
   <em>Far-field SPL at the four microphones: two 85 ms FW-H records (15 ms start-up removed from each), one Hann-windowed spectrum per record, averaged. The BPF and its second harmonic appear on every microphone, the third on all but the radial one; the 25 Hz tone only in the rotor plane.</em>
 </p>
 
-The 25 Hz tone was not expected for a 5-blade rotor. The force history explains it: the in-plane blade force (about 0.95 mN) rotates with the rotor and oscillates at the shaft frequency, while the thrust fluctuates near the BPF. A rotating in-plane force radiates mostly in the rotor plane, which matches the 25 Hz tone being 3 dB weaker at 45° than at the radial microphone, with nothing above the floor on the axis. The tone has the same level and phase in both records, so it is a steady feature of the run. I have not established whether that imbalance is physical (blade-to-blade geometry) or comes from the mesh.
+The 25 Hz tone was not expected for a 5-blade rotor. The force history explains it: the in-plane blade force (about 0.95 mN) rotates with the rotor and oscillates at the shaft frequency, while the thrust fluctuates near the BPF. A rotating in-plane force radiates mostly in the rotor plane, which matches the 25 Hz tone being 3 dB weaker at 45° than at the radial microphone, with nothing above the floor on the axis. The tone has the same level and phase in both records, so it is a steady feature of the run. At 25 Hz the rotor is acoustically compact, and a compact dipole rotating in the rotor plane radiates nothing on the axis and 3.0 dB less at 45° than in the plane; the FW-H data give 3.1 dB. I have not established whether that imbalance is physical (blade-to-blade geometry) or comes from the mesh.
 
 <p align="center">
   <img src="figures/acoustics/directivity.png" width="70%"><br>
@@ -85,6 +87,7 @@ FreeCAD → STL → snappyHexMesh + cyclicAMI → pimpleFoam k-ω SST → FW-H (
 
   <img src="figures/acoustics/raw_vs_filtered.png" width="80%">
 
+- Levels against the blade forces: a compact-dipole estimate built from the integrated forces ([`paper/scripts/dipole_check.py`](paper/scripts/dipole_check.py)) does not reproduce the FW-H levels: FW-H is 12 dB above it at 25 Hz and 18 dB below it for the BPF on the axis. The two errors have opposite signs, so no single unit factor explains them, and I treat only the tone frequencies, their presence on each microphone and the 25 Hz directivity as results.
 - Mesh quality: `checkMesh` figures and the cells the solver has to tolerate are listed in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#3-mesh); their effect on the spectrum has not been measured.
 <details>
 <summary>Cluster benchmark</summary>
@@ -99,7 +102,8 @@ On a 0.78 M-cell test case, the gain on one node saturates at 4 cores (1.51× ov
 - No prism layers on the blades (they could not be inserted on the thin serrated edges). Blade y⁺ averages about 4 and peaks at 445, so the surface loading is preliminary.
 - Time-step independence was not checked with a second Δt.
 - URANS resolves tonal noise only. Serrations act mainly on broadband noise, and there is no smooth-blade reference run, so this study does not measure the effect of the serrations.
-- The FW-H surface covers the blades only (no casing, arms, hub or quadrupole terms), and absolute levels are not compared with any measurement.
+- The FW-H surface covers the blades only (no casing, arms, hub or quadrupole terms), and absolute levels are not compared with any measurement. They are also inconsistent with the blade forces (see above), a discrepancy I have not resolved.
+- Two 85 ms records give an 11.8 Hz resolution. A contiguous 0.4 s record would cost about 55 to 60 h on the cluster, which was offline in October 2026.
 
 ## Reproduce
 
@@ -128,7 +132,7 @@ cp system/controlDict.phase2 system/controlDict
 mpirun -np 8 pimpleFoam -parallel                    # phase 2, FW-H recording to 0.39 s
 ```
 
-The full report is in [`docs/report_EN.pdf`](docs/report_EN.pdf), with a French version alongside. It predates the per-record re-analysis above: its acoustic levels come from the concatenated, filtered signal, so use the README values.
+The full report is [`paper/main.pdf`](paper/main.pdf) (rebuild with `paper/build_paper.sh`). The June 2026 reports, which predate the re-analysis, are kept in [`docs/archive/`](docs/archive).
 
 ## Credits
 

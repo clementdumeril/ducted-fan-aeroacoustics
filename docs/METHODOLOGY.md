@@ -1,7 +1,7 @@
 # Methodology
 
-A technical companion to the full reports (`report_FR.pdf`, `report_EN.pdf`): the physics, the numerical
-choices, and the practical problems solved along the way.
+A technical companion to the report (`paper/main.pdf`): the physics, the numerical choices, and the
+practical problems solved along the way.
 
 ## 1. Source of the noise
 
@@ -105,8 +105,10 @@ Two earlier choices were dropped after checking them:
 The overall level (OASPL) is not reported: absolute levels are underpredicted (incompressible URANS,
 blade-only FW-H surface), so only level differences between microphones and tone-to-floor ratios are used.
 
-The PDF reports (`report_EN.pdf`, `report_FR.pdf`) predate this re-analysis: their acoustic levels come
-from the concatenated, filtered signal.
+The June 2026 reports (`docs/archive/`) predate this re-analysis: their acoustic levels come from the
+concatenated, filtered signal. The absolute FW-H levels are also inconsistent with a compact-dipole estimate
+built from the blade forces (`paper/scripts/dipole_check.py`), so only tone frequencies and directivity are
+used as results.
 
 Units: in `pimpleFoam`, `p` is a kinematic pressure (m²/s²); conversion to Pa uses p_Pa = ρ·p_kin.
 

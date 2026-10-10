@@ -16,6 +16,15 @@ from scipy.interpolate import griddata
 REPO = Path(__file__).resolve().parents[2]
 VTK_DIR = Path(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("FLOW_VTK", REPO / "data" / "flow_vtk"))
 OUT = REPO / "figures" / "flow"
+PAPER = REPO / "paper" / "figures"
+
+
+def save(name):
+    """PNG for the README; 200 dpi PNG for the paper (filled contours on ~10^5 triangles are too heavy as PDF)."""
+    plt.savefig(OUT / f"{name}.png", dpi=130)
+    PAPER.mkdir(parents=True, exist_ok=True)
+    plt.savefig(PAPER / f"{name}.png", dpi=200)
+
 if not (VTK_DIR / "meridien.vtp").exists() or not (VTK_DIR / "avalZ.vtp").exists():
     sys.exit(f"meridien.vtp and avalZ.vtp not found in {VTK_DIR}.\n"
              "These ParaView slices of the last time step are not published; export them from the case\n"
@@ -46,7 +55,7 @@ def finish(ax, title, name):
     ax.set_xlabel("z, fan axis (mm)   [upstream < 0 < downstream]"); ax.set_ylabel("radius x (mm)")
     ax.set_title(title)
     ax.set_aspect("equal"); ax.set_xlim(-120, 250); ax.set_ylim(-110, 110)
-    plt.tight_layout(); plt.savefig(OUT / name, dpi=130); plt.close()
+    plt.tight_layout(); save(name.removesuffix(".png")); plt.close()
 
 
 # ---------- meridional cut (y = 0): axial z horizontal, radius x vertical ----------
@@ -90,7 +99,7 @@ plt.colorbar(c, ax=ax, label="|U| (m/s)")
 ax.set_xlabel("x (mm)"); ax.set_ylabel("y (mm)")
 ax.set_title("Wake 60 mm downstream of the rotor")
 ax.set_aspect("equal"); ax.set_xlim(-110, 110); ax.set_ylim(-110, 110)
-plt.tight_layout(); plt.savefig(OUT / "wake_cut_z60.png", dpi=130); plt.close()
+plt.tight_layout(); save("wake_cut_z60"); plt.close()
 
 print(f"|U| max (meridional) = {Umag.max():.1f} m/s, jet p90 (z > 50 mm) = {np.percentile(Umag[z > 50], 90):.1f} m/s")
 print(f"Figures written to {OUT}")

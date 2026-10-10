@@ -24,3 +24,10 @@ __pycache__/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# LaTeX build files (paper/main.pdf is versioned)
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out

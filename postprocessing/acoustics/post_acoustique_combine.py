@@ -20,6 +20,15 @@ REPO = Path(__file__).resolve().parents[2]
 RECORDS = [(REPO / "data" / "FWH_helice-time.dat", 0.19),     # (file, sim time at the start of the record)
            (REPO / "data" / "FWH_helice-time_2.dat", 0.29)]
 OUT = REPO / "figures" / "acoustics"
+PAPER = REPO / "paper" / "figures"
+
+
+def save(name):
+    """PNG for the README, vector PDF for the paper."""
+    plt.savefig(OUT / f"{name}.png", dpi=125)
+    PAPER.mkdir(parents=True, exist_ok=True)
+    plt.savefig(PAPER / f"{name}.pdf")
+
 PREF = 20e-6; BPF = 125.7; SHAFT = 25.15; T_CUT = 0.015; NFFT = 8192
 mics = ["aval_1m", "amont_1m", "radial_1m", "diag45_1m"]
 names = {"aval_1m": "downstream", "amont_1m": "upstream", "radial_1m": "radial", "diag45_1m": "45 deg"}
@@ -79,7 +88,7 @@ ax.set_xlim(0, 700); ax.set_ylim(-50, 30)
 ax.set_xlabel("Frequency (Hz)"); ax.set_ylabel("SPL (dB re 20 µPa)")
 ax.set_title("Far-field SPL from FW-H at 1 m: average of two 85 ms segments (Hann, zero-padded)")
 ax.grid(alpha=.3); ax.legend(fontsize=9)
-plt.tight_layout(); plt.savefig(OUT / "spl_spectrum.png", dpi=125); plt.close()
+plt.tight_layout(); save("spl_spectrum"); plt.close()
 
 # --- directivity: shaft-frequency and BPF levels and local floor per microphone (raw) ---
 fig, ax = plt.subplots(figsize=(9, 4.8))
@@ -97,7 +106,7 @@ ax.set_xticks(xk, [names[m] for m in mics]); ax.set_ylabel("Level (dB re 20 µPa
 ax.set_ylim(-48, 28)
 ax.set_title("Directivity at 1 m: 25 Hz tone in the rotor plane only (on the axis it is at the floor); BPF everywhere")
 ax.legend(fontsize=8, ncol=2, loc="upper left"); ax.grid(axis="y", alpha=.3)
-plt.tight_layout(); plt.savefig(OUT / "directivity.png", dpi=125); plt.close()
+plt.tight_layout(); save("directivity"); plt.close()
 
 # --- check: raw vs filtered spectrum on the radial microphone ---
 m = "radial_1m"
@@ -110,7 +119,7 @@ ax.set_xlim(0, 700); ax.set_ylim(-50, 30)
 ax.set_xlabel("Frequency (Hz)"); ax.set_ylabel("SPL (dB re 20 µPa)")
 ax.set_title("Median-filter check, radial microphone: same 25 Hz tone, but the filter raises the floor by about 24 dB")
 ax.grid(alpha=.3); ax.legend(fontsize=9)
-plt.tight_layout(); plt.savefig(OUT / "raw_vs_filtered.png", dpi=125); plt.close()
+plt.tight_layout(); save("raw_vs_filtered"); plt.close()
 
 print(f"\n{'mic':12}{'':10}{'25 Hz':>8}{'BPF':>8}{'floor':>8}{'BPF-floor':>11}")
 for m in mics:

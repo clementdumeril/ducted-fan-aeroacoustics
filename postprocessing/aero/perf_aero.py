@@ -14,6 +14,15 @@ REPO = Path(__file__).resolve().parents[2]
 FORCES = REPO / "data" / "forces_data"
 VTK_DIR = Path(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("FLOW_VTK", REPO / "data" / "flow_vtk"))
 OUT = REPO / "figures" / "acoustics"
+PAPER = REPO / "paper" / "figures"
+
+
+def save(name):
+    """PNG for the README, vector PDF for the paper."""
+    plt.savefig(OUT / f"{name}.png", dpi=130)
+    PAPER.mkdir(parents=True, exist_ok=True)
+    plt.savefig(PAPER / f"{name}.pdf")
+
 OMEGA = 158.0  # rad/s
 
 
@@ -39,7 +48,7 @@ ax2 = ax1.twinx()
 ax2.plot(t * 1000, -Mz * 1000, color="#D85A30", lw=1.0)
 ax2.set_ylabel("Torque -Mz (mN·m)", color="#D85A30"); ax2.tick_params(axis="y", labelcolor="#D85A30")
 ax1.set_title("Blade loads: start-up transient, then an established periodic regime")
-plt.tight_layout(); plt.savefig(OUT / "blade_loads_time.png", dpi=130); plt.close()
+plt.tight_layout(); save("blade_loads_time"); plt.close()
 
 # --- established regime: mean over the last 50 ms ---
 mask = t > t.max() - 0.05
