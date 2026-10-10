@@ -15,7 +15,7 @@ rotation (sliding mesh) rather than a frozen-rotor approximation.
 
 Two obstacles prevent reading the pressure at the microphones directly:
 
-1. The domain is about 0.3 m across; the observers (1 m) are outside it, and meshing out to 1 m finely
+1. The domain is about 0.4 m across; the observers (1 m) are outside it, and meshing out to 1 m finely
    enough to propagate sound would cost millions of extra cells.
 2. The solver is incompressible, so the solution contains no acoustic waves (infinite sound speed).
 
@@ -64,8 +64,8 @@ The concave and low-determinant cells sit in geometric transitions, which is com
 follows a curved geometry. The solver runs with `FOAM_SIGFPE=false` to tolerate them; this does not fix
 their quality, and their effect on the spectrum has not been measured.
 
-y⁺: the intended low-Re prism layers could not be inserted on the thin serrated blades, so there are
-no wall layers. Blade y⁺ averages about 4 (buffer layer) and reaches 445 locally, so the surface loading
+y⁺: prism layers were not used in the retained mesh (`addLayers false`; an earlier attempt collapsed on
+the thin serrated blades), so there are no wall layers. Blade y⁺ averages about 4 (buffer layer) and reaches 445 locally, so the surface loading
 is preliminary.
 
 ## 4. Numerical model
@@ -102,7 +102,7 @@ Two earlier choices were dropped after checking them:
   microphones are in the discarded start-up), and the filter raises the floor by 9 to 24 dB and hides the BPF harmonics
   (`figures/acoustics/raw_vs_filtered.png`).
 
-The overall level (OASPL) is not reported: absolute levels are underpredicted (incompressible URANS,
+The overall level (OASPL) is not reported: absolute levels are unreliable (incompressible URANS,
 blade-only FW-H surface), so only level differences between microphones and tone-to-floor ratios are used.
 
 The June 2026 reports (`docs/archive/`) predate this re-analysis: their acoustic levels come from the

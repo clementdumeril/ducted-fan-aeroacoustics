@@ -35,11 +35,11 @@ Full report, in preprint form: [`paper/main.pdf`](paper/main.pdf).
 
 The 25 Hz tone was not expected for a 5-blade rotor. The force history explains it: the in-plane blade force (0.95 mN, of which 0.77 mN from pressure) rotates with the rotor and oscillates at the shaft frequency, while the thrust fluctuates near the BPF. A rotating in-plane force radiates mostly in the rotor plane, which matches the 25 Hz tone being 3 dB weaker at 45° than at the radial microphone, with nothing above the floor on the axis. The tone has the same level and phase in both records, so it is a steady feature of the run. At 25 Hz the rotor is acoustically compact, and a compact dipole rotating in the rotor plane radiates nothing on the axis and 3.0 dB less at 45° than in the plane; the FW-H data give 3.1 dB. I have not established whether that imbalance comes from the STL and mesh (the surfaces are faceted) or from the flow. A perfectly symmetric rotor with three arms would not radiate the BPF on the axis either (the axisymmetric mode first appears at 3×BPF), so the on-axis BPF also points to a loss of five-fold symmetry.
 
-Above 600 Hz the spectra contain lines every 100.5 Hz (642 to 1446 Hz), up to 44 dB above the floor. They follow bursts in the blade force that repeat every 10 ms, which is both the field write interval and a quarter revolution (9.94 ms); 170 ms of data cannot tell the two apart. I treat the comb as probably numerical and leave it out of the results ([`paper/scripts/comb_check.py`](paper/scripts/comb_check.py)).
+Above 600 Hz the spectra contain lines every 100.5 Hz (642 to 1446 Hz), up to 44 dB above the floor. They come from bursts in the blade force whose period, fitted on ten bursts, is 9.943 ± 0.011 ms: a quarter revolution, and not the 10 ms field write interval. The comb is locked to the rotor four times per revolution, probably through the four-fold symmetry of the box and Cartesian mesh seen across the AMI interface; I treat it as numerical and leave it out of the results ([`paper/scripts/comb_check.py`](paper/scripts/comb_check.py)).
 
 <p align="center">
   <img src="figures/acoustics/directivity.png" width="70%"><br>
-  <em>Absolute levels are underpredicted (incompressible URANS, blade-only FW-H surface); compare levels between microphones only.</em>
+  <em>Absolute levels are unreliable (see the force-based check below); compare levels between microphones only.</em>
 </p>
 
 ## What I built
@@ -61,7 +61,7 @@ I started at the end of May with steady MRF runs (3000, then 4320 rpm) to get fl
 
 ## How it works
 
-Tonal fan noise comes from the unsteady pressure the blades exert on the air, a rotating dipole. The domain is only 0.3 m wide and the solver is incompressible, so it carries no sound waves. FW-H solves this: the pressure on the blade surface is recorded during the run, and the wave equation is integrated analytically to each microphone at its retarded time.
+Tonal fan noise comes from the unsteady pressure the blades exert on the air, a rotating dipole. The domain is only 0.4 m wide and the solver is incompressible, so it carries no sound waves. FW-H solves this: the pressure on the blade surface is recorded during the run, and the wave equation is integrated analytically to each microphone at its retarded time.
 
 ```
 FreeCAD → STL → snappyHexMesh + cyclicAMI → pimpleFoam k-ω SST → FW-H (blade surface) → p'(t) at 4 mics → FFT
@@ -101,7 +101,7 @@ On a 0.78 M-cell test case, the gain on one node saturates at 4 cores (1.51× ov
 ## Limitations
 
 - No mesh-independence study: one 1.95 M-cell mesh was retained, not validated against coarser and finer meshes.
-- No prism layers on the blades (they could not be inserted on the thin serrated edges). Blade y⁺ averages about 4 and peaks at 445, so the surface loading is preliminary.
+- No prism layers on the blades (not used in the retained mesh; an earlier attempt collapsed on the thin serrated edges). Blade y⁺ averages about 4 and peaks at 445, so the surface loading is preliminary.
 - Time-step independence was not checked with a second Δt.
 - URANS resolves tonal noise only. Serrations act mainly on broadband noise, and there is no smooth-blade reference run, so this study does not measure the effect of the serrations.
 - The FW-H surface covers the blades only (no casing, arms, hub or quadrupole terms), and absolute levels are not compared with any measurement. They are also inconsistent with the blade forces (see above), a discrepancy I have not resolved.

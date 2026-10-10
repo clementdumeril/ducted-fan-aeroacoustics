@@ -59,6 +59,25 @@ for ax, T in zip(axs, (0.010, 0.25 / 25.15)):
     lag = (ph[np.argmax(pw)] - ph[np.argmax(pz)]) % (T * 1e3)
     print(f"fold T = {T*1e3:.2f} ms: F_z peak/mean {pz.max():.1f} at {ph[np.argmax(pz)]:.1f} ms, "
           f"FW-H peak/mean {pw.max():.1f} at {ph[np.argmax(pw)]:.1f} ms, lag {lag:.1f} ms (r/c0 = 2.9 ms)")
+# 3. period of the bursts from their centres: strongest envelope maximum in each ~10 ms cycle,
+#    envelope-weighted centroid around it, then a straight-line fit of centre time against cycle number.
+cyc = np.floor((tf - tf[0]) / 0.00997).astype(int)
+cent, num = [], []
+for c in np.unique(cyc):
+    idx_c = np.where(cyc == c)[0]
+    if len(idx_c) < 20:          # incomplete cycle at the end of the record
+        continue
+    j = idx_c[np.argmax(env_z[idx_c])]
+    w = slice(max(j - 3, 0), min(j + 4, len(env_z)))
+    cent.append(np.sum(tf[w] * env_z[w]) / np.sum(env_z[w])); num.append(c)
+cent, num = np.array(cent), np.array(num, dtype=float)
+A = np.column_stack([np.ones_like(num), num]); coef, res, *_ = np.linalg.lstsq(A, cent, rcond=None)
+s2 = res[0] / (len(cent) - 2); se = np.sqrt(s2 / np.sum((num - num.mean()) ** 2))
+quarter = 0.25 / 25.15
+print("burst centres (ms):", np.round(cent * 1e3, 2))
+print(f"burst centres: {len(cent)}, fitted period {coef[1]*1e3:.3f} +- {se*1e3:.3f} ms "
+      f"(quarter revolution {quarter*1e3:.3f} ms: {abs(coef[1]-quarter)/se:.1f} sigma; "
+      f"write interval 10.000 ms: {abs(coef[1]-0.010)/se:.1f} sigma)")
 axs[0].set_ylabel("folded high-pass envelope / mean"); axs[0].legend(fontsize=8)
 fig.tight_layout()
 out = REPO / "paper" / "figures"; out.mkdir(parents=True, exist_ok=True)

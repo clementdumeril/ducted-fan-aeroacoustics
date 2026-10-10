@@ -134,14 +134,14 @@ solver works with a kinematic pressure; the FW-H input uses $\rho_0=\SI{1.2}{kg/
 
 The mesh is built with \texttt{snappyHexMesh} from a \SI{10}{mm} background grid, refined to level 5 (\SI{0.31}{mm})
 on the blade surfaces so that the serrations are resolved, with refined rotor and wake cylinders (Figure~\ref{fig:mesh}).
-The STL surfaces of this mesh were extracted from the boundary of an earlier mesh, so they are faceted. The faceZone
+The STL surfaces of this mesh were extracted from the boundary of an earlier mesh, so they are faceted; prism layers were not used (an earlier attempt collapsed on the thin blades). The faceZone
 of the rotor cylinder is split into a cyclicAMI pair with \texttt{createBaffles}. The retained mesh has \num{1949584}
-cells (Table~\ref{tab:checkmesh}); no prism layers were inserted, and the blade $y^+$ averages about 4 and reaches 445.
+cells (Table~\ref{tab:checkmesh}), and the blade $y^+$ averages about 4 and reaches 445.
 
-The data trail needs one remark. The mesh dictionary of the 1.95 M-cell mesh (now
+Provenance of the data: the mesh dictionary of the 1.95 M-cell mesh (now
 \path{openfoam_case/system/snappyHexMeshDict}) matches the mesh and quality figures above. An earlier run of the same
 case on a \num{906936}-cell mesh (blades at level 4, dictionary kept as \path{snappyHexMeshDict.baseline_0p91M}) was
-computed on a desktop under WSL with OpenFOAM v2406 from 15 to 18 June 2026 and reached \SI{0.276}{s}; its FW-H
+computed on a desktop under WSL with OpenFOAM v2406 from 15 to 18 June 2026 and, according to its solver log, reached \SI{0.276}{s}; its FW-H
 output differs from the published records and is not used. The published records (written 25--27 June) come from
 the cluster runs with OpenFOAM v2506; the cluster has been offline since, so the link between these records and the
 1.95 M-cell mesh could not be re-checked from the case directories.
@@ -233,7 +233,7 @@ directivities agree: the mean signal is $+1.24$, $-1.11$, $+0.86$ and \SI{\appro
 $45^\circ$ and radial microphones, the $\cos\theta$ pattern of the axial force, and the \SI{25}{Hz} tone is absent on
 the axis and \SI{3.1}{dB} weaker at $45^\circ$ than in the plane ($\cos 45^\circ$ gives \SI{3.0}{dB}). The amplitudes do
 not. The steady case is the simplest: it involves no time derivative and no retardation, yet the FW-H mean is 0.35
-times the estimate. On the axis $M_r=0$ and $\dot{\mathbf{n}}\cdot\hat{\mathbf{x}}=0$ for a rotation about $z$, so
+times the estimate. On the axis $M_r=0$ and $\dot{\mathbf{n}}\cdot\hat{\mathbf{z}}=0$ for a rotation about $z$, so
 the FW-H integrand there is that of a fixed surface, and the surface motion cannot explain the axial gaps. The first
 suspect is the input to the acoustic step (pressure scaling, surface normals, or the library output convention); it
 has not been tested.
@@ -313,19 +313,19 @@ faceted) or from the flow was not established.
 
 Above \SI{600}{Hz} the spectra contain lines at 642, 742, 843, 943, 1044, 1144, 1244, 1346 and \SI{1446}{Hz}, spaced
 \SI{100.5}{Hz}, up to \SI{44}{dB} above the floor on the radial microphone; on the axial microphones they carry about
-90\,\% of the signal variance. Folding the envelope of the high-passed signals on a \SI{10}{ms} period shows bursts in
-the axial blade force about \SI{1.4}{ms} after each multiple of \SI{10}{ms}, and the same bursts in the FW-H signal
-\SI{2.8}{ms} later, the propagation time over \SI{1}{m} (Figure~\ref{fig:comb}). The period matches the field write
-interval (\SI{10}{ms}) and also a quarter revolution (\SI{9.94}{ms}); the two folds are equally sharp, and
-\SI{170}{ms} of data cannot separate them. No physical source at four events per revolution is expected for five
-blades and three arms, so the comb is most probably numerical. A rerun with a different write interval would
-decide. It lies well above the tones studied here and is excluded from the results.
+90\,\% of the signal variance. The lines continue up to \SI{2}{kHz}. They come from bursts in the axial blade force that
+reach the FW-H signal about \SI{3}{ms} later, the propagation time over \SI{1}{m} (Figure~\ref{fig:comb}). A
+straight-line fit of the ten burst centres gives a period of $9.943\pm\SI{0.011}{ms}$: a quarter revolution
+(\SI{9.944}{ms}), and five standard errors away from the \SI{10}{ms} field write interval. The bursts are locked to
+the rotor, four times per revolution. No physical source with that order is expected for five blades and three arms;
+the probable cause is the four-fold symmetry of the box and of the Cartesian background mesh seen by the rotor through
+the AMI interface. The comb is treated as numerical and lies above the tones studied here.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\linewidth]{comb_fold.pdf}
 \caption{Envelope of the high-passed ($>\SI{600}{Hz}$) axial blade force and downstream FW-H signal, folded on
-\SI{10.00}{ms} (left) and \SI{9.94}{ms} (right). Script \texttt{paper/scripts/comb\_check.py}.}
+\SI{10.00}{ms} (left, field write interval) and \SI{9.94}{ms} (right, a quarter revolution); the fold is sharper on the right. Script \texttt{paper/scripts/comb\_check.py}.}
 \label{fig:comb}
 \end{figure}
 
@@ -333,9 +333,9 @@ decide. It lies well above the tones studied here and is excluded from the resul
 
 The flow shows the expected annular jet. In the acoustic output, the frequencies and directivities are consistent with
 the blade forces, while the amplitudes are not; the on-axis BPF and the \SI{25}{Hz} tone both imply a loss of
-five-fold symmetry, and the line comb above \SI{600}{Hz} is probably numerical. The limits are:
+five-fold symmetry, and the line comb above \SI{600}{Hz}, locked to the rotor four times per revolution, is probably numerical. The limits are:
 \begin{itemize}
-  \item \emph{Amplitudes.} The FW-H levels differ from the force-based estimates by $-9$ to $+14$~dB
+  \item \emph{Amplitudes.} The FW-H levels differ from the force-based estimates by $-18$ to $+14$~dB
     (Table~\ref{tab:dipole}).
   \item \emph{Resolution.} Two \SI{85}{ms} segments give \SI{11.8}{Hz}. A contiguous \SI{0.4}{s} record would take
     more than \SI{100}{h} on the 1.95 M-cell mesh (the measured cost is \SI{16.5}{s} per step on the 0.91 M-cell mesh),
@@ -354,10 +354,10 @@ five-fold symmetry, and the line comb above \SI{600}{Hz} is probably numerical. 
 
 A sliding-mesh URANS and FW-H chain gives \SI{43.3}{mN} of thrust and \SI{108}{m^3/h} at \SI{1509}{rpm} for the
 serrated ducted fan, with a BPF tone and harmonics on all microphones and a once-per-revolution tone confined to the
-rotor plane. Checking the FW-H output against the integrated blade force validated its directivities and showed that
+rotor plane. Checking the FW-H output against the integrated blade force agreed on its directivities and showed that
 its amplitudes are not reliable. In order of priority: run the acoustic step on a case with a known answer (a
-stationary or rotating compact dipole) to locate the amplitude error; rerun with a different field-write interval to
-test the line comb; record a contiguous signal of at least \SI{0.4}{s}; add two meshes and a second time step; and run
+stationary or rotating compact dipole) to locate the amplitude error; test the line comb with a rotated or cylindrical background
+mesh; record a contiguous signal of at least \SI{0.4}{s}; add two meshes and a second time step; and run
 a smooth-blade reference rotor before drawing any conclusion on the serrations.
 
 \section*{Reproducibility statement}
