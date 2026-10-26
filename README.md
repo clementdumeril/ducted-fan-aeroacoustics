@@ -14,9 +14,9 @@ This was internal work at Polytechnia, the engineering consultancy I co-founded 
 | Quantity (ω = 158 rad/s) | Value |
 |---|---:|
 | Axial thrust / torque | 43.3 mN / 1.02 mN·m |
-| Volume flow rate, 60 mm downstream | 108 m³/h |
+| Volume flow rate, 60 mm downstream (net flux through the cut; needs ParaView slices not in the repo) | 108 m³/h |
 | Blade-passing tone (BPF = 5 × 25.15 Hz) | 126 Hz, 20 to 28 dB above the local floor on all four microphones |
-| Strongest tone | 25 Hz (once per revolution), in the rotor plane only |
+| Strongest off-axis tone | 25 Hz (once per revolution): 61 dB above the floor radially, 48 dB at 45°, at the floor on the axis |
 
 <p align="center">
   <img src="figures/acoustics/spl_spectrum.png" width="85%"><br>
@@ -31,7 +31,7 @@ The 25 Hz tone comes from the in-plane blade force, which rotates with the rotor
 FreeCAD → STL → snappyHexMesh + cyclicAMI → pimpleFoam k-ω SST → FW-H (blade surface) → p'(t) at 4 mics → FFT
 ```
 
-- Mesh: 1.95 M cells, blades refined to 0.31 mm so the serrations are resolved, cyclicAMI sliding interface at R = 72 mm.
+- Mesh: 1.95 M cells (checkMesh log not versioned), blades refined to 0.31 mm so the serrations are resolved, cyclicAMI sliding interface at R = 72 mm.
 - Solver: `pimpleFoam` at 158 rad/s, first with an adaptive Δt to 0.19 s, then a fixed Δt so the FW-H signal is uniformly sampled.
 - Acoustics: Farassat 1A (libAcoustics) on the blade surface, four microphones at 1 m.
 - Runs: a 2-node Linux cluster I set up (8 + 4 cores, MPI over Ethernet).
@@ -46,14 +46,14 @@ The problems I hit and how I fixed them are in [`docs/METHODOLOGY.md`](docs/METH
 
 ## Running it
 
-The STL geometry is not published, so only post-processing runs from this repo (Python 3 with numpy, scipy, matplotlib):
+The STL geometry is not published, so only post-processing runs from this repo (`pip install -r requirements.txt`, Python >= 3.10):
 
 ```bash
 python postprocessing/acoustics/post_acoustique_combine.py   # spectra, tone levels, directivity
 python postprocessing/aero/perf_aero.py                      # thrust, torque, power
 ```
 
-With OpenFOAM (ESI v2506), [libAcoustics](https://github.com/unicfdlab/libAcoustics) and the STL files in place:
+With OpenFOAM ESI v2506 (used for the published records; the case dictionaries still carry v2406 headers from an earlier run), [libAcoustics](https://github.com/unicfdlab/libAcoustics) and the STL files in `constant/triSurface/`:
 
 ```bash
 cd openfoam_case

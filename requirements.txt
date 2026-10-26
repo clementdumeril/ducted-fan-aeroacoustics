@@ -1,0 +1,8 @@
+# Python >= 3.10. Figures were made with matplotlib 3.10.6.
+# External tools: OpenFOAM ESI (openfoam.com) v2506 + libAcoustics, MPI, ParaView pvpython
+# for the render scripts, pdflatex/bibtex for the paper.
+numpy
+scipy
+matplotlib>=3.10
+# optional, for the flow-rate and flow-field scripts (need ParaView slices not in the repo):
+# vtk
