@@ -1,79 +1,65 @@
-# Aeroacoustic CFD of a ducted fan with owl-inspired serrated blades
+# Ducted-fan aeroacoustics: URANS and FW-H prediction of a serrated desk fan
 
-I simulated a 5-blade ducted desk fan at 1509 rpm with URANS in OpenFOAM (k-ω SST, sliding mesh) and coupled it to a Ffowcs Williams–Hawkings analogy to predict the tonal noise at 1 m. The run gives 43 mN of thrust, 108 m³/h, and a blade-passing tone at 126 Hz.
+[Report (PDF)](paper/main.pdf) · [Details](docs/details.md) · [Methodology](docs/METHODOLOGY.md) · [OpenFOAM case](openfoam_case/) · [Housing structure of the same fan](https://github.com/clementdumeril/ventilator-modal-analysis-petgcf) · [Cite](CITATION.cff)
 
-<p align="center">
-  <img src="media/anim_pales_orbit.gif" width="640"><br>
-  <em>Five serrated blades, colored by surface pressure (kinematic, m²/s²).</em>
-</p>
+![Overview: serrated fan, OpenFOAM mesh and URANS, FW-H, thrust and tones](docs/figures/overview.png)
 
-This was internal work at Polytechnia, the engineering consultancy I co-founded in 2026, on a quiet desk fan with trailing-edge serrations inspired by owl feathers (Wei et al., 2024). No client has received it. Between late May and June 2026 I built the chain from the FreeCAD model: STL export, mesh, rotating URANS, FW-H, spectra. The structural side of the same fan is in [ventilator-modal-analysis-petgcf](https://github.com/clementdumeril/ventilator-modal-analysis-petgcf). The full report is [`paper/main.pdf`](paper/main.pdf).
+A sliding-mesh URANS simulation (OpenFOAM, k-ω SST) of a 5-blade ducted desk fan with owl-inspired serrated blades, coupled to a Ffowcs Williams–Hawkings analogy, gives 43.3 mN of thrust at 1509 rpm and resolves the 126 Hz blade-passing tone 20 to 28 dB above the spectral floor at four microphones 1 m away. Absolute levels disagree with a dipole estimate, so only tone frequencies and directivity are used.
+
+## Method
+
+The FreeCAD model is meshed with snappyHexMesh (1.95 M cells, 0.31 mm on the blades so the serrations are resolved). The rotor zone turns at 158 rad/s and is coupled to the stator through a cyclicAMI interface; `pimpleFoam` solves incompressible URANS with k-ω SST, first with adaptive Δt, then with a fixed Δt = 3.5·10⁻⁵ s so the acoustic signal is uniformly sampled. libAcoustics evaluates FW-H (Farassat 1A) on the rotating blade surface for four microphones at 1 m; two 85 ms records per microphone are Hann-windowed and their spectra averaged. Full formulation: [docs/details.md](docs/details.md).
+
+Internal work at Polytechnia, the engineering consultancy I co-founded in 2026. Mine: STL preparation, meshing, the OpenFOAM case, the runs on a 2-node Linux cluster I set up, post-processing, renders and report. Reused: the fan geometry (Polytechnia FreeCAD model), OpenFOAM (ESI) and the FW-H implementation of [libAcoustics](https://github.com/unicfdlab/libAcoustics).
 
 ## Results
 
-| Quantity (ω = 158 rad/s) | Value |
-|---|---:|
-| Axial thrust / torque | 43.3 mN / 1.02 mN·m |
-| Volume flow rate, 60 mm downstream (net flux through the cut; needs ParaView slices not in the repo) | 108 m³/h |
-| Blade-passing tone (BPF = 5 × 25.15 Hz) | 126 Hz, 20 to 28 dB above the local floor on all four microphones |
-| Strongest off-axis tone | 25 Hz (once per revolution): 61 dB above the floor radially, 48 dB at 45°, at the floor on the axis |
+| Quantity (ω = 158 rad/s) | Value | Source |
+|---|---:|---|
+| Thrust / torque / aerodynamic power | 43.3 mN / 1.02 mN·m / 0.162 W | `data/forces_data/`, `postprocessing/aero/perf_aero.py` |
+| Volume flow rate, 60 mm downstream | 108 m³/h | report section 6.1 |
+| Blade-passing tone (5 x 25.15 Hz) | 126 Hz, 20 to 28 dB above the floor, all four microphones | `data/FWH_helice-time*.dat`, `postprocessing/acoustics/post_acoustique_combine.py` |
+| Once-per-revolution tone | 25 Hz: 61 dB above the floor radially, 48 dB at 45°, at the floor on the axis | same script |
+
+The 25 Hz tone comes from the in-plane blade force, which rotates with the rotor, so it radiates in the rotor plane and not along the axis. Verification (dipole check, numerical comb above 600 Hz, post-processing protocol): [docs/details.md](docs/details.md#verification).
 
 <p align="center">
-  <img src="figures/acoustics/spl_spectrum.png" width="85%"><br>
-  <em>FW-H spectra relative to each microphone's floor. Shaded: a comb of lines spaced 100.5 Hz, probably numerical.</em>
+  <img src="media/anim_ecoulement_fluide.gif" width="560" alt="Q-criterion vortices around the rotor"><br>
+  <em>Q-criterion vortices around the rotor, colored by velocity magnitude.</em>
 </p>
 
-The 25 Hz tone comes from the in-plane blade force, which rotates with the rotor. The comb above 600 Hz is locked to a quarter revolution, so I treat it as numerical ([`paper/scripts/comb_check.py`](paper/scripts/comb_check.py)).
+## Install and quick start
 
-## Setup
+The STL geometry is not published, so only post-processing runs from this repo (tested on Windows 10, Python 3.11.9).
 
+```bash
+pip install -r requirements.txt
+python postprocessing/acoustics/post_acoustique_combine.py   # ~8 s: tone table, spectra, directivity
+python postprocessing/aero/perf_aero.py                      # ~7 s: "Thrust = 43.3 mN", torque, power
 ```
-FreeCAD → STL → snappyHexMesh + cyclicAMI → pimpleFoam k-ω SST → FW-H (blade surface) → p'(t) at 4 mics → FFT
-```
 
-- Mesh: 1.95 M cells (checkMesh log not versioned), blades refined to 0.31 mm so the serrations are resolved, cyclicAMI sliding interface at R = 72 mm.
-- Solver: `pimpleFoam` at 158 rad/s, first with an adaptive Δt to 0.19 s, then a fixed Δt so the FW-H signal is uniformly sampled.
-- Acoustics: Farassat 1A (libAcoustics) on the blade surface, four microphones at 1 m.
-- Runs: a 2-node Linux cluster I set up (8 + 4 cores, MPI over Ethernet).
+OpenFOAM commands (ESI v2506 with libAcoustics): [docs/details.md](docs/details.md#all-run-commands).
 
-The problems I hit and how I fixed them are in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#6-practical-problems-and-fixes).
+## Code structure
+
+| Path | Content |
+|---|---|
+| `openfoam_case/` | fields and BCs, rotation and turbulence, mesh, schemes, FW-H, both control dicts |
+| `data/` | FW-H pressure records at the four microphones, blade forces and moments |
+| `postprocessing/` | spectra and tone levels; thrust, torque, power; ParaView renders |
+| `paper/` | report source, figure and table scripts, PDF |
+| `docs/` | details, methodology, June 2026 reports in `docs/archive/` |
 
 ## Limitations
 
 - No mesh or time-step independence study, and no prism layers on the blades (y⁺ peaks at 445).
-- URANS resolves tonal noise only, and there is no smooth-blade reference run, so this does not measure the effect of the serrations.
-- Absolute levels disagree with a dipole estimate from the blade forces, so I only use tone frequencies and directivity. Two 85 ms records give an 11.8 Hz resolution, and the cluster is currently offline.
+- URANS resolves tonal noise only, and there is no smooth-blade reference run, so the effect of the serrations is not measured.
+- No OASPL or absolute dB is reported; two 85 ms records give an 11.8 Hz resolution.
+- The cluster that produced the records is offline, so their link to the 1.95 M-cell mesh could not be re-checked (report section 4.1).
+- No acoustic measurement; all results are numerical.
 
-## Running it
+## Citation and license
 
-The STL geometry is not published, so only post-processing runs from this repo (`pip install -r requirements.txt`, Python >= 3.10):
+Cite with [`CITATION.cff`](CITATION.cff) or the report. MIT license, see [LICENSE](LICENSE). Serration concept: Z. Wei et al., *Nature Communications* 15, 2024, [doi:10.1038/s41467-024-48454-3](https://doi.org/10.1038/s41467-024-48454-3).
 
-```bash
-python postprocessing/acoustics/post_acoustique_combine.py   # spectra, tone levels, directivity
-python postprocessing/aero/perf_aero.py                      # thrust, torque, power
-```
-
-With OpenFOAM ESI v2506 (used for the published records; the case dictionaries still carry v2406 headers from an earlier run), [libAcoustics](https://github.com/unicfdlab/libAcoustics) and the STL files in `constant/triSurface/`:
-
-```bash
-cd openfoam_case
-cp -r 0.orig 0
-blockMesh && surfaceFeatureExtract
-snappyHexMesh -overwrite          # serial only
-createBaffles -overwrite
-decomposePar
-export FOAM_SIGFPE=false
-mpirun -np 8 pimpleFoam -parallel     # phase 1
-cp system/controlDict.phase2 system/controlDict
-mpirun -np 8 pimpleFoam -parallel     # phase 2, FW-H recording
-```
-
-The June 2026 reports, which predate the re-analysis, are in [`docs/archive/`](docs/archive).
-
-## Credits
-
-- Serration concept and acoustic method: Z. Wei et al., *Nature Communications*, 2024 (G. X. Gu group, UC Berkeley).
-- FW-H: [libAcoustics](https://github.com/unicfdlab/libAcoustics). Solver: OpenFOAM (ESI).
-- Fan geometry: Polytechnia FreeCAD model. Simulation setup, runs, post-processing and reports: Clément Dumeril.
-
-[clement.dumeril.net](https://clement.dumeril.net) · [github.com/clementdumeril](https://github.com/clementdumeril) · MIT license
+Clément Dumeril · [clement.dumeril.net](https://clement.dumeril.net)

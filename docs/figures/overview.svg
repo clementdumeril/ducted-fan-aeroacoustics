@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#444"/>
+    </marker>
+  </defs>
+  <rect x="0.75" y="0.75" width="1198.5" height="678.5" rx="16" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+
+  <g fill="none" stroke="#8A9AA8" stroke-width="1.2" stroke-dasharray="6 4">
+    <rect x="24" y="24" width="266" height="428" rx="10"/>
+    <rect x="320" y="24" width="520" height="428" rx="10"/>
+    <rect x="870" y="24" width="306" height="428" rx="10"/>
+    <rect x="24" y="472" width="1152" height="184" rx="10"/>
+  </g>
+  <g font-size="15" fill="#5A6875" letter-spacing="1.2">
+    <text x="40" y="48">GEOMETRY</text>
+    <text x="336" y="48">OPENFOAM AND FW-H</text>
+    <text x="886" y="48">RESULTS AT 1509 RPM</text>
+    <text x="40" y="496">FLOW FIELD</text>
+  </g>
+
+  <!-- input -->
+  <image href="ov_blades.png" x="40" y="72" width="234" height="153"/>
+  <rect x="40" y="262" width="234" height="134" rx="10" fill="#FBE5CF" stroke="#C97A2B" stroke-width="1.5"/>
+  <text x="56" y="294" font-size="22" fill="#15202A">Serrated fan</text>
+  <g font-size="16" fill="#5A6875">
+    <text x="56" y="322">5 blades in a duct</text>
+    <text x="56" y="346">owl-inspired trailing edge</text>
+    <text x="56" y="370">ω = 158 rad/s</text>
+  </g>
+
+  <!-- method -->
+  <rect x="336" y="60" width="488" height="120" rx="10" fill="#DCF1EE" stroke="#0D7A6F" stroke-width="1.5"/>
+  <text x="356" y="96" font-size="24" fill="#15202A">Mesh</text>
+  <g font-size="16" fill="#5A6875">
+    <text x="356" y="124">snappyHexMesh, 1.95 M cells</text>
+    <text x="356" y="148">0.31 mm cells on the blades</text>
+  </g>
+  <image href="ov_mesh.png" x="696" y="70" width="112" height="96"/>
+  <rect x="696" y="70" width="112" height="96" rx="6" fill="none" stroke="#B5C0CA" stroke-width="1"/>
+
+  <rect x="336" y="196" width="488" height="120" rx="10" fill="#DCF1EE" stroke="#0D7A6F" stroke-width="1.5"/>
+  <text x="356" y="232" font-size="24" fill="#15202A">URANS</text>
+  <g font-size="16" fill="#5A6875">
+    <text x="356" y="260">pimpleFoam, k-ω SST</text>
+    <text x="356" y="284">sliding mesh, cyclicAMI</text>
+  </g>
+  <image href="ov_velocity.png" x="646" y="208" width="162" height="96"/>
+  <rect x="646" y="208" width="162" height="96" rx="6" fill="none" stroke="#B5C0CA" stroke-width="1"/>
+
+  <rect x="336" y="332" width="488" height="104" rx="10" fill="#DCF1EE" stroke="#0D7A6F" stroke-width="1.5"/>
+  <text x="356" y="368" font-size="24" fill="#15202A">Ffowcs Williams–Hawkings</text>
+  <g font-size="16" fill="#5A6875">
+    <text x="356" y="396">Farassat 1A on the blade surface</text>
+    <text x="356" y="420">4 microphones at 1 m</text>
+  </g>
+
+  <g stroke="#444" stroke-width="2" fill="none" marker-end="url(#ah)">
+    <path d="M276,148 C306,148 306,120 334,120"/>
+    <path d="M470,180 L470,194"/>
+    <path d="M470,316 L470,330"/>
+    <path d="M824,256 C852,256 852,104 884,104"/>
+    <path d="M824,384 C856,384 856,220 884,220"/>
+  </g>
+
+  <!-- outputs -->
+  <text x="886" y="96" font-size="26" fill="#15202A">43.3 mN thrust</text>
+  <text x="886" y="122" font-size="16" fill="#5A6875">1.02 mN·m torque, 0.162 W</text>
+  <image href="ov_spectrum.png" x="886" y="148" width="274" height="122"/>
+  <rect x="886" y="148" width="274" height="122" rx="6" fill="none" stroke="#B5C0CA" stroke-width="1"/>
+  <text x="886" y="304" font-size="20" fill="#15202A">126 Hz blade-passing tone</text>
+  <text x="886" y="344" font-size="32" fill="#B8461F">20 to 28 dB</text>
+  <text x="886" y="370" font-size="16" fill="#5A6875">above the floor, all 4 microphones</text>
+  <line x1="886" y1="390" x2="1160" y2="390" stroke="#D0D7DE" stroke-width="1"/>
+  <text x="886" y="414" font-size="16" fill="#5A6875">tone frequencies and directivity only;</text>
+  <text x="886" y="436" font-size="16" fill="#5A6875">no mesh-independence study</text>
+
+  <!-- band -->
+  <image href="ov_serrations.png" x="40" y="508" width="152" height="132"/>
+  <rect x="40" y="508" width="152" height="132" rx="6" fill="none" stroke="#B5C0CA" stroke-width="1"/>
+  <text x="208" y="540" font-size="18" fill="#15202A">Serrations</text>
+  <text x="208" y="566" font-size="16" fill="#5A6875">resolved in</text>
+  <text x="208" y="588" font-size="16" fill="#5A6875">the mesh</text>
+
+  <image href="ov_vortex.png" x="424" y="508" width="140" height="132"/>
+  <rect x="424" y="508" width="140" height="132" rx="6" fill="none" stroke="#B5C0CA" stroke-width="1"/>
+  <text x="580" y="540" font-size="18" fill="#15202A">Vortices</text>
+  <text x="580" y="566" font-size="16" fill="#5A6875">Q-criterion</text>
+  <text x="580" y="588" font-size="16" fill="#5A6875">iso-surface</text>
+
+  <image href="ov_wake.png" x="808" y="508" width="132" height="132"/>
+  <rect x="808" y="508" width="132" height="132" rx="6" fill="none" stroke="#B5C0CA" stroke-width="1"/>
+  <text x="958" y="540" font-size="18" fill="#15202A">Wake</text>
+  <text x="958" y="566" font-size="16" fill="#5A6875">|U| at 60 mm</text>
+  <text x="958" y="588" font-size="16" fill="#5A6875">downstream</text>
+</svg>
